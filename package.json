@@ -13,6 +13,7 @@
   },
   "devDependencies": {
     "@types/chrome": "^0.0.276",
+    "@types/node": "^20.14.10",
     "@types/react": "^18.3.5",
     "@types/react-dom": "^18.3.2",
     "@vitejs/plugin-react": "^4.2.1",
