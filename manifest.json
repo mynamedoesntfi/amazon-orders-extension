@@ -22,7 +22,8 @@
     {
       "matches": [
         "https://*.amazon.com/gp/cart/*",
-        "https://*.amazon.com/cart/*"
+        "https://*.amazon.com/cart/*",
+        "https://www.amazon.com/gp/cart/view.html*"
       ],
       "js": [
         "content/index.js"

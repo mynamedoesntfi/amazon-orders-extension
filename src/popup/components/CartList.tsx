@@ -1,5 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import type { CartItem } from "../../content";
+import CartListItem from "./CartListItem";
 import "./CartList.css";
 
 type Status = "idle" | "loading" | "ready" | "error";
@@ -120,11 +121,7 @@ const CartList: React.FC = () => {
       <ul className="cart-list__items">
         {items.map((item) => {
           const key = item.productUrl || `${item.title}-${item.quantity}`;
-          return (
-            <li key={key} className="cart-list__item" title={item.title}>
-              <span className="cart-list__item-title">{item.title}</span>
-            </li>
-          );
+          return <CartListItem key={key} item={item} />;
         })}
       </ul>
     </section>
