@@ -2,58 +2,11 @@ import React, { useState, useCallback } from "react";
 import type { CartItem } from "../../content";
 import "./ExportComponent.css";
 
-type ScrapeResponse =
-  | {
-      items: CartItem[];
-      error?: undefined;
-    }
-  | {
-      items?: undefined;
-      error: string;
-    };
+type Status = "idle" | "loading" | "ready" | "error";
 
-async function getActiveTabId(): Promise<number> {
-  return new Promise((resolve, reject) => {
-    chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
-      if (chrome.runtime.lastError) {
-        reject(new Error(chrome.runtime.lastError.message));
-        return;
-      }
-      const [tab] = tabs;
-      if (!tab?.id) {
-        reject(
-          new Error("Open your Amazon cart tab and try again.")
-        );
-        return;
-      }
-      resolve(tab.id);
-    });
-  });
-}
-
-async function requestCartItems(): Promise<CartItem[]> {
-  const tabId = await getActiveTabId();
-  return new Promise<CartItem[]>((resolve, reject) => {
-    chrome.tabs.sendMessage(
-      tabId,
-      { type: "SCRAPE_CART" },
-      (response: ScrapeResponse | undefined) => {
-        if (chrome.runtime.lastError) {
-          reject(new Error(chrome.runtime.lastError.message));
-          return;
-        }
-        if (!response) {
-          reject(new Error("No response from content script."));
-          return;
-        }
-        if ("error" in response && response.error) {
-          reject(new Error(response.error));
-          return;
-        }
-        resolve(response.items ?? []);
-      }
-    );
-  });
+interface ExportComponentProps {
+  items: CartItem[];
+  status: Status;
 }
 
 function escapeCsvField(field: string): string {
@@ -111,17 +64,15 @@ function downloadCsv(csvContent: string, filename: string): void {
   URL.revokeObjectURL(url);
 }
 
-const ExportComponent: React.FC = () => {
+const ExportComponent: React.FC<ExportComponentProps> = ({ items, status }) => {
   const [isExporting, setIsExporting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const handleExport = useCallback(async () => {
+  const handleExport = useCallback(() => {
     setIsExporting(true);
     setError(null);
 
     try {
-      const items = await requestCartItems();
-
       if (items.length === 0) {
         setError("No items to export. Please load your cart first.");
         setIsExporting(false);
@@ -142,7 +93,9 @@ const ExportComponent: React.FC = () => {
       );
       setIsExporting(false);
     }
-  }, []);
+  }, [items]);
+
+  const isDisabled = isExporting || status === "loading" || items.length === 0;
 
   return (
     <div className="export-component">
@@ -150,7 +103,7 @@ const ExportComponent: React.FC = () => {
         type="button"
         className="export-component__btn"
         onClick={handleExport}
-        disabled={isExporting}
+        disabled={isDisabled}
       >
         {isExporting ? "Exporting..." : "Export Data to CSV"}
       </button>
