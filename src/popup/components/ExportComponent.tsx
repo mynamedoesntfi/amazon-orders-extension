@@ -1,6 +1,7 @@
 import React, { useState, useCallback } from "react";
 import type { CartItem } from "../../content";
-import { convertToCsv } from "../utils/csv";
+import { generateCsvExport } from "../utils/csv";
+import { exportToGoogleDrive } from "../utils/googleDrive";
 import "./ExportComponent.css";
 
 type Status = "idle" | "loading" | "ready" | "error";
@@ -35,9 +36,7 @@ const ExportComponent: React.FC<ExportComponentProps> = ({ items, status }) => {
     }
 
     try {
-      const csvContent = convertToCsv(items);
-      const timestamp = new Date().toISOString().replace(/[:.]/g, "-").slice(0, -5);
-      const filename = `amazon-cart-${timestamp}.csv`;
+      const { csvContent, filename } = generateCsvExport(items);
 
       downloadCsvToPC(csvContent, filename);
     } catch (err) {
@@ -49,9 +48,32 @@ const ExportComponent: React.FC<ExportComponentProps> = ({ items, status }) => {
     }
   }, [items]);
 
-  const handleExportToGoogleDrive = useCallback(() => {
-    setIsGoogleDriveActive((prev) => !prev);
-  }, []);
+  const handleExportToGoogleDrive = useCallback(async () => {
+    setError(null);
+    setIsGoogleDriveActive(true);
+
+    if (items.length === 0) {
+      setError("No items to export. Please load your cart first.");
+      setIsGoogleDriveActive(false);
+      return;
+    }
+
+    try {
+      const { csvContent, filename } = generateCsvExport(items);
+
+      await exportToGoogleDrive(csvContent, filename);
+      
+      // Success - button stays red to indicate success
+      // You could also show a success message or reset after a delay
+    } catch (err) {
+      setError(
+        err instanceof Error
+          ? err.message
+          : "Failed to export to Google Drive."
+      );
+      setIsGoogleDriveActive(false);
+    }
+  }, [items]);
 
   const isDisabled = status === "loading" || items.length === 0;
 

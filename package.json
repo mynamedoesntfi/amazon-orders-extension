@@ -4,9 +4,11 @@
   "private": true,
   "scripts": {
     "dev": "vite",
+    "prebuild": "node scripts/build-manifest.js",
     "build": "tsc && vite build",
     "lint": "eslint . --ext .ts,.tsx"
   },
+  "type": "module",
   "dependencies": {
     "react": "^18.3.1",
     "react-dom": "^18.3.1"

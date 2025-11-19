@@ -9,11 +9,18 @@
   },
   "permissions": [
     "activeTab",
-    "scripting"
+    "scripting",
+    "identity"
   ],
   "host_permissions": [
     "https://*.amazon.com/*"
   ],
+  "oauth2": {
+    "client_id": "PLACEHOLDER_WILL_BE_REPLACED_BY_BUILD_SCRIPT",
+    "scopes": [
+      "https://www.googleapis.com/auth/drive.file"
+    ]
+  },
   "background": {
     "service_worker": "background/index.js",
     "type": "module"
