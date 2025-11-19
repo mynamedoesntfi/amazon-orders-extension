@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import type { CartItem } from "../../content";
 import CartListItem from "./CartListItem";
+import { formatCurrency, parseCurrency } from "../utils/currency";
 import "./CartList.css";
 
 type Status = "idle" | "loading" | "ready" | "error";
@@ -94,6 +95,18 @@ const CartList: React.FC = () => {
     return "Cart items";
   }, [status, items.length]);
 
+  const subtotal = useMemo(() => {
+    return items.reduce((sum, item) => {
+      const priceText = item.total || item.price;
+      const price = parseCurrency(priceText);
+      const quantity = Number.isFinite(item.quantity) ? item.quantity : 1;
+      return sum + price * quantity;
+    }, 0);
+  }, [items]);
+
+  const showSubtotal = status === "ready" && items.length > 0;
+  const formattedSubtotal = formatCurrency(subtotal);
+
   return (
     <section className="cart-list">
       <header className="cart-list__header">
@@ -107,6 +120,13 @@ const CartList: React.FC = () => {
           {status === "loading" ? "Refreshing…" : "Refresh"}
         </button>
       </header>
+
+      {showSubtotal ? (
+        <p className="cart-list__subtotal cart-list__subtotal--top">
+          Subtotal ({items.length} item{items.length > 1 ? "s" : ""}):{" "}
+          <span>{formattedSubtotal}</span>
+        </p>
+      ) : null}
 
       {error ? (
         <p className="cart-list__message cart-list__message--error">{error}</p>
@@ -124,6 +144,13 @@ const CartList: React.FC = () => {
           return <CartListItem key={key} item={item} />;
         })}
       </ul>
+
+      {showSubtotal ? (
+        <p className="cart-list__subtotal cart-list__subtotal--bottom">
+          Subtotal ({items.length} item{items.length > 1 ? "s" : ""}):{" "}
+          <span>{formattedSubtotal}</span>
+        </p>
+      ) : null}
     </section>
   );
 };
