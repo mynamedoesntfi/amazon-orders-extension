@@ -4,6 +4,11 @@
   gap: 8px;
 }
 
+.export-component__buttons {
+  display: flex;
+  gap: 8px;
+}
+
 .export-component__btn {
   background: #146eb4;
   color: white;
@@ -14,6 +19,7 @@
   font-weight: 500;
   cursor: pointer;
   transition: background 0.2s ease-in-out;
+  flex: 1;
 }
 
 .export-component__btn:hover:not(:disabled) {
@@ -23,6 +29,30 @@
 .export-component__btn:disabled {
   opacity: 0.6;
   cursor: not-allowed;
+}
+
+.export-component__btn--google-drive {
+  background: #146eb4;
+}
+
+.export-component__btn--google-drive:hover:not(:disabled) {
+  background: #0e5490;
+}
+
+.export-component__btn--google-drive.export-component__btn--active {
+  background: #b91c1c;
+}
+
+.export-component__btn--google-drive.export-component__btn--active:hover:not(:disabled) {
+  background: #991b1b;
+}
+
+.export-component__btn--pc {
+  background: #146eb4;
+}
+
+.export-component__btn--pc:hover:not(:disabled) {
+  background: #0e5490;
 }
 
 .export-component__error {
