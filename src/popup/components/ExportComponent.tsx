@@ -10,7 +10,7 @@ interface ExportComponentProps {
   status: Status;
 }
 
-function downloadCsv(csvContent: string, filename: string): void {
+function downloadCsvToPC(csvContent: string, filename: string): void {
   const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
   const url = URL.createObjectURL(blob);
   const link = document.createElement("a");
@@ -39,7 +39,7 @@ const ExportComponent: React.FC<ExportComponentProps> = ({ items, status }) => {
       const timestamp = new Date().toISOString().replace(/[:.]/g, "-").slice(0, -5);
       const filename = `amazon-cart-${timestamp}.csv`;
 
-      downloadCsv(csvContent, filename);
+      downloadCsvToPC(csvContent, filename);
     } catch (err) {
       setError(
         err instanceof Error
