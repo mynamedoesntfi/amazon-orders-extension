@@ -166,12 +166,3 @@ console.log("[CART] Content script loaded and ready");
 console.log("[CART] Current URL:", window.location.href);
 console.log("[CART] Document ready state:", document.readyState);
 console.log("[CART] ========================================");
-
-// Also add a visual indicator to the page
-if (document.body) {
-  const indicator = document.createElement("div");
-  indicator.textContent = "[CART] Extension loaded";
-  indicator.style.cssText = "position:fixed;top:0;right:0;background:red;color:white;padding:5px;z-index:99999;font-size:12px;";
-  document.body.appendChild(indicator);
-  setTimeout(() => indicator.remove(), 3000);
-}

@@ -57,3 +57,25 @@
   border-radius: 6px;
 }
 
+.cart-list__subtotal {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin: 0;
+  font-size: 13px;
+  font-weight: 600;
+  color: #111827;
+}
+
+.cart-list__subtotal span {
+  font-size: 14px;
+}
+
+.cart-list__subtotal--top {
+  margin-top: -4px;
+}
+
+.cart-list__subtotal--bottom {
+  margin-top: 8px;
+}
+

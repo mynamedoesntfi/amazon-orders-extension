@@ -59,6 +59,7 @@
   -webkit-box-orient: vertical;
   overflow: hidden;
   text-overflow: ellipsis;
+  text-decoration: none;
 }
 
 .cart-list-item__meta {

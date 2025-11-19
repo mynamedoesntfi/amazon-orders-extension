@@ -1,6 +1,7 @@
 import React from "react";
 import "./App.css";
 import CartList from "./components/CartList";
+import ExportComponent from "./components/ExportComponent";
 
 const App: React.FC = () => {
   return (
@@ -10,8 +11,7 @@ const App: React.FC = () => {
         <p>Amazon cart exporter scaffold.</p>
       </header>
       <section className="popup__actions">
-        <button type="button">Export Data to CSV</button>
-        <p>Cart data will appear here once the build pipeline is configured.</p>
+        <ExportComponent />
       </section>
 
       <CartList />

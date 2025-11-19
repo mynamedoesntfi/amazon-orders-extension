@@ -21,9 +21,15 @@ const CartListItem: React.FC<CartListItemProps> = ({ item }) => {
         )}
       </div>
       <div className="cart-list-item__details">
-        <h3 className="cart-list-item__title" title={item.title}>
+        <a
+          href={item.productUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="cart-list-item__title"
+          title={item.title}
+        >
           {item.title}
-        </h3>
+        </a>
         <div className="cart-list-item__meta">
           <span className="cart-list-item__price">Price: {item.price}</span>
           <span className="cart-list-item__quantity">
