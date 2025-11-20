@@ -1,6 +1,7 @@
 import React, { useState, useCallback } from "react";
 import type { CartItem } from "../../content";
-import { convertToCsv } from "../utils/csv";
+import { generateCsvExport } from "../utils/csv";
+import { exportToGoogleDrive } from "../utils/googleDrive";
 import "./ExportComponent.css";
 
 type Status = "idle" | "loading" | "ready" | "error";
@@ -23,24 +24,39 @@ function downloadCsvToPC(csvContent: string, filename: string): void {
 }
 
 const ExportComponent: React.FC<ExportComponentProps> = ({ items, status }) => {
-  const [isGoogleDriveActive, setIsGoogleDriveActive] = useState(false);
+  const [isExportingToPC, setIsExportingToPC] = useState(false);
+  const [isExportingToGoogleDrive, setIsExportingToGoogleDrive] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
-  const handleExportToPC = useCallback(() => {
+  const handleExportToPC = useCallback(async () => {
     setError(null);
+    setSuccessMessage(null);
+    setIsExportingToPC(true);
 
     if (items.length === 0) {
       setError("No items to export. Please load your cart first.");
+      setIsExportingToPC(false);
       return;
     }
 
     try {
-      const csvContent = convertToCsv(items);
-      const timestamp = new Date().toISOString().replace(/[:.]/g, "-").slice(0, -5);
-      const filename = `amazon-cart-${timestamp}.csv`;
+      const { csvContent, filename } = generateCsvExport(items);
 
+      // Small delay to show green state
+      await new Promise(resolve => setTimeout(resolve, 100));
       downloadCsvToPC(csvContent, filename);
+      
+      // Show success message
+      setSuccessMessage("Export was successful");
+      
+      // Reset after a brief moment
+      setTimeout(() => setIsExportingToPC(false), 500);
+      
+      // Clear success message after 3 seconds
+      setTimeout(() => setSuccessMessage(null), 3000);
     } catch (err) {
+      setIsExportingToPC(false);
       setError(
         err instanceof Error
           ? err.message
@@ -49,9 +65,37 @@ const ExportComponent: React.FC<ExportComponentProps> = ({ items, status }) => {
     }
   }, [items]);
 
-  const handleExportToGoogleDrive = useCallback(() => {
-    setIsGoogleDriveActive((prev) => !prev);
-  }, []);
+  const handleExportToGoogleDrive = useCallback(async () => {
+    setError(null);
+    setSuccessMessage(null);
+    setIsExportingToGoogleDrive(true);
+
+    if (items.length === 0) {
+      setError("No items to export. Please load your cart first.");
+      setIsExportingToGoogleDrive(false);
+      return;
+    }
+
+    try {
+      const { csvContent, filename } = generateCsvExport(items);
+
+      await exportToGoogleDrive(csvContent, filename);
+      
+      // Success - reset exporting state and show success message
+      setIsExportingToGoogleDrive(false);
+      setSuccessMessage("Export was successful");
+      
+      // Clear success message after 3 seconds
+      setTimeout(() => setSuccessMessage(null), 3000);
+    } catch (err) {
+      setIsExportingToGoogleDrive(false);
+      setError(
+        err instanceof Error
+          ? err.message
+          : "Failed to export to Google Drive."
+      );
+    }
+  }, [items]);
 
   const isDisabled = status === "loading" || items.length === 0;
 
@@ -61,22 +105,27 @@ const ExportComponent: React.FC<ExportComponentProps> = ({ items, status }) => {
         <button
           type="button"
           className={`export-component__btn export-component__btn--google-drive ${
-            isGoogleDriveActive ? "export-component__btn--active" : ""
+            isExportingToGoogleDrive ? "export-component__btn--exporting" : ""
           }`}
           onClick={handleExportToGoogleDrive}
-          disabled={isDisabled}
+          disabled={isDisabled || isExportingToGoogleDrive}
         >
           Export CSV to Google Drive
         </button>
         <button
           type="button"
-          className="export-component__btn export-component__btn--pc"
+          className={`export-component__btn export-component__btn--pc ${
+            isExportingToPC ? "export-component__btn--exporting" : ""
+          }`}
           onClick={handleExportToPC}
-          disabled={isDisabled}
+          disabled={isDisabled || isExportingToPC}
         >
           Export CSV to PC
         </button>
       </div>
+      {successMessage && (
+        <p className="export-component__success">{successMessage}</p>
+      )}
       {error && (
         <p className="export-component__error">{error}</p>
       )}

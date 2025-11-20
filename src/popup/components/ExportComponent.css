@@ -39,20 +39,27 @@
   background: #0e5490;
 }
 
-.export-component__btn--google-drive.export-component__btn--active {
-  background: #b91c1c;
-}
-
-.export-component__btn--google-drive.export-component__btn--active:hover:not(:disabled) {
-  background: #991b1b;
-}
-
 .export-component__btn--pc {
   background: #146eb4;
 }
 
 .export-component__btn--pc:hover:not(:disabled) {
   background: #0e5490;
+}
+
+.export-component__btn--exporting {
+  background: #16a34a !important;
+  cursor: wait;
+}
+
+.export-component__btn--exporting:hover:not(:disabled) {
+  background: #15803d !important;
+}
+
+.export-component__success {
+  margin: 0;
+  font-size: 12px;
+  color: #16a34a;
 }
 
 .export-component__error {

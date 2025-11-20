@@ -44,3 +44,14 @@ export function convertToCsv(items: CartItem[]): string {
   return csvContent;
 }
 
+export function generateCsvExport(items: CartItem[]): {
+  csvContent: string;
+  filename: string;
+} {
+  const csvContent = convertToCsv(items);
+  const timestamp = new Date().toISOString().replace(/[:.]/g, "-").slice(0, -5);
+  const filename = `amazon-cart-${timestamp}.csv`;
+
+  return { csvContent, filename };
+}
+
