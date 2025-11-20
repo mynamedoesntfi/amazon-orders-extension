@@ -1,5 +1,40 @@
 export async function authenticateGoogleDrive(): Promise<string> {
   return new Promise((resolve, reject) => {
+    // Debug: Check chrome object availability
+    if (typeof chrome === 'undefined') {
+      reject(new Error('Chrome extension API is not available. Make sure you are running this in a Chrome extension context.'));
+      return;
+    }
+
+    // Debug: Log available chrome APIs (for troubleshooting)
+    console.log('[CART] Chrome APIs available:', {
+      chrome: typeof chrome !== 'undefined',
+      identity: typeof chrome.identity !== 'undefined',
+      runtime: typeof chrome.runtime !== 'undefined',
+      manifest: chrome.runtime?.getManifest?.()?.permissions || 'N/A',
+      oauth2: chrome.runtime?.getManifest?.()?.oauth2 || 'N/A'
+    });
+
+    // Check if chrome.identity API is available
+    if (!chrome.identity) {
+      const manifest = chrome.runtime?.getManifest?.();
+      const permissions = manifest?.permissions || [];
+      const hasIdentityPermission = permissions.includes('identity');
+      
+      reject(new Error(
+        `Chrome Identity API is not available. ` +
+        `Manifest permissions: [${permissions.join(', ')}]. ` +
+        `Has identity permission: ${hasIdentityPermission}. ` +
+        `Please remove and reload the extension.`
+      ));
+      return;
+    }
+
+    if (!chrome.identity.getAuthToken) {
+      reject(new Error('chrome.identity.getAuthToken is not available. Make sure the extension has the "identity" permission and proper OAuth2 configuration.'));
+      return;
+    }
+
     chrome.identity.getAuthToken(
       {
         interactive: true,
@@ -8,6 +43,10 @@ export async function authenticateGoogleDrive(): Promise<string> {
       (token) => {
         if (chrome.runtime.lastError) {
           reject(new Error(chrome.runtime.lastError.message));
+          return;
+        }
+        if (!token) {
+          reject(new Error('Failed to get authentication token'));
           return;
         }
         resolve(token);
