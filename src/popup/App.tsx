@@ -2,6 +2,7 @@ import React from "react";
 import "./App.css";
 import CartList from "./components/CartList";
 import ExportComponent from "./components/ExportComponent";
+import SignOutButton from "./components/SignOutButton";
 import { useCartItems } from "./hooks/useCartItems";
 
 const App: React.FC = () => {
@@ -9,8 +10,9 @@ const App: React.FC = () => {
 
   return (
     <main className="popup">
-      <header>
+      <header className="popup__header">
         <h1>CART</h1>
+        <SignOutButton />
       </header>
       <section className="popup__actions">
         <ExportComponent items={items} status={status} />

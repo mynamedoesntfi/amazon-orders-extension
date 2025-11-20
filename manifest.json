@@ -13,7 +13,8 @@
     "identity"
   ],
   "host_permissions": [
-    "https://*.amazon.com/*"
+    "https://*.amazon.com/*",
+    "https://oauth2.googleapis.com/*"
   ],
   "oauth2": {
     "client_id": "946635487950-m0lvfb5981k8t20rgd2lq4slkri3k82h.apps.googleusercontent.com",

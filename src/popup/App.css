@@ -7,14 +7,19 @@
   box-shadow: 0 12px 30px rgba(31, 41, 55, 0.12);
 }
 
-.popup header {
+.popup__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
   margin-bottom: 12px;
+  gap: 12px;
 }
 
-.popup h1 {
+.popup__header h1 {
   margin: 0 0 4px;
   font-size: 20px;
   font-weight: 600;
+  flex: 1;
 }
 
 .popup__actions {

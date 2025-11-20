@@ -65,18 +65,12 @@ function getAbsoluteUrl(href: string): string {
 }
 
 export function scrapeCart(): CartItem[] {
-  console.log("[CART] Starting cart scrape...");
-  
   const activeCartRoot =
     document.querySelector('[data-name="Active Items"]') ?? document;
-  
-  console.log("[CART] Active cart root found:", activeCartRoot !== document);
 
   const itemNodes = activeCartRoot.querySelectorAll(
     '[data-asin].sc-list-item, .sc-list-item'
   );
-
-  console.log("[CART] Found", itemNodes.length, "item nodes");
 
   const items: CartItem[] = [];
 
@@ -94,11 +88,8 @@ export function scrapeCart(): CartItem[] {
     const title = getTextContent(titleElement);
 
     if (!title) {
-      console.log("[CART] Skipping item - no title found");
       return;
     }
-    
-    console.log("[CART] Processing item:", title.substring(0, 50) + "...");
 
     // Extract product link and make it absolute
     const linkElement = itemElement.querySelector(
@@ -141,28 +132,17 @@ export function scrapeCart(): CartItem[] {
     });
   });
 
-  console.log("[CART] Scraped", items.length, "items");
   return items;
 }
 
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
-  console.log("[CART] Received message:", message?.type);
   if (message?.type === "SCRAPE_CART") {
     try {
       const items = scrapeCart();
-      console.log("[CART] Sending response with", items.length, "items");
       sendResponse({ items });
     } catch (error) {
-      console.error("[CART] Error scraping cart:", error);
       sendResponse({ error: (error as Error).message ?? "Unknown error" });
     }
   }
   return true;
 });
-
-// Log immediately when script loads - multiple ways to ensure visibility
-console.log("[CART] ========================================");
-console.log("[CART] Content script loaded and ready");
-console.log("[CART] Current URL:", window.location.href);
-console.log("[CART] Document ready state:", document.readyState);
-console.log("[CART] ========================================");

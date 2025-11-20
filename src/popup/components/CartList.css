@@ -29,7 +29,9 @@
 }
 
 .cart-list__refresh:hover:not(:disabled) {
-  background: #f3f4f6;
+  background: #e5e7eb;
+  border-color: #0e5490;
+  color: #0e5490;
 }
 
 .cart-list__refresh:disabled {

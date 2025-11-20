@@ -1,0 +1,31 @@
+.signout-button {
+  background: #dc2626;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  padding: 6px 12px;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.2s ease-in-out;
+  white-space: nowrap;
+}
+
+.signout-button:hover:not(:disabled) {
+  background: #b91c1c;
+}
+
+.signout-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.signout-button--signing-out {
+  background: #16a34a;
+  cursor: wait;
+}
+
+.signout-button--signing-out:hover:not(:disabled) {
+  background: #15803d;
+}
+
