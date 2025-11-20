@@ -11,7 +11,7 @@ const App: React.FC = () => {
   return (
     <main className="popup">
       <header className="popup__header">
-        <h1>CART</h1>
+        <h1>Amazon Orders</h1>
         <SignOutButton />
       </header>
       <section className="popup__actions">

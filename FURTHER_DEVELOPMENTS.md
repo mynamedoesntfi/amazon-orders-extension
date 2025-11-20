@@ -1,6 +1,6 @@
 # Further Developments
 
-This document tracks future improvements, bug fixes, and feature enhancements for the CART extension.
+This document tracks future improvements, bug fixes, and feature enhancements for the Amazon Orders Extension.
 
 ## Tickets
 

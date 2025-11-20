@@ -34,7 +34,7 @@ export async function authenticateGoogleDrive(): Promise<string> {
     }
 
     // Debug: Log available chrome APIs (for troubleshooting)
-    console.log('[CART] Chrome APIs available:', {
+    console.log('[Amazon Orders Extension] Chrome APIs available:', {
       chrome: typeof chrome !== 'undefined',
       identity: typeof chrome.identity !== 'undefined',
       runtime: typeof chrome.runtime !== 'undefined',
