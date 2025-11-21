@@ -1,9 +1,9 @@
 import React from "react";
-import type { OrderItem as OrderItemType } from "../model/OrderItem";
+import type { OrderItem  } from "../model/OrderItem";
 import "./OrderItem.css";
 
 interface OrderItemProps {
-  item: OrderItemType;
+  item: OrderItem;
 }
 
 const OrderItem: React.FC<OrderItemProps> = ({ item }) => {

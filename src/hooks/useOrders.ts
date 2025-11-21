@@ -1,11 +1,11 @@
 import { useState, useCallback, useEffect } from "react";
-import type { OrderData } from "../model/OrderData";
+import type { Order } from "../model/Order";
 
 type Status = "idle" | "loading" | "ready" | "error";
 
 type ScrapeResponse =
   | {
-      orders: OrderData[];
+      orders: Order[];
       error?: undefined;
     }
   | {
@@ -32,9 +32,9 @@ async function getActiveTabId(): Promise<number> {
   });
 }
 
-async function requestOrders(): Promise<OrderData[]> {
+async function requestOrders(): Promise<Order[]> {
   const tabId = await getActiveTabId();
-  return new Promise<OrderData[]>((resolve, reject) => {
+  return new Promise<Order[]>((resolve, reject) => {
     chrome.tabs.sendMessage(
       tabId,
       { type: "SCRAPE_ORDERS" },
@@ -59,7 +59,7 @@ async function requestOrders(): Promise<OrderData[]> {
 
 export function useOrders() {
   const [status, setStatus] = useState<Status>("idle");
-  const [orders, setOrders] = useState<OrderData[]>([]);
+  const [orders, setOrders] = useState<Order[]>([]);
   const [error, setError] = useState<string | null>(null);
 
   const loadOrders = useCallback(async () => {

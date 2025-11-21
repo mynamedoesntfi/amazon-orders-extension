@@ -1,14 +1,14 @@
 import React, { useMemo } from "react";
-import Order from "./Order";
-import type { OrderData } from "../model/OrderData";
+import OrderComponent from "./Order";
+import type { Order } from "../model/Order";
 import "./OrderList.css";
 
 type Status = "idle" | "loading" | "ready" | "error";
 
-export type { OrderData };
+export type { Order };
 
 interface OrderListProps {
-  orders: OrderData[];
+  orders: Order[];
   status: Status;
   error: string | null;
   onRefresh: () => void;
@@ -57,7 +57,7 @@ const OrderList: React.FC<OrderListProps> = ({
 
       <div className="order-list__orders">
         {orders.map((order, index) => (
-          <Order key={order.orderNumber || `order-${index}`} order={order} orderNumber={index + 1} />
+          <OrderComponent key={order.orderNumber || `order-${index}`} order={order} orderCounterNumber={index + 1} />
         ))}
       </div>
     </section>

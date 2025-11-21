@@ -1,14 +1,14 @@
 import React, { useMemo } from "react";
-import type { OrderData } from "../model/OrderData";
+import type { Order } from "../model/Order";
 import OrderItem from "./OrderItem";
 import "./Order.css";
 
 interface OrderProps {
-  order: OrderData;
-  orderNumber?: number;
+  order: Order;
+  orderCounterNumber?: number;
 }
 
-const Order: React.FC<OrderProps> = ({ order, orderNumber: displayNumber }) => {
+const Order: React.FC<OrderProps> = ({ order, orderCounterNumber: displayNumber }) => {
   const { items, orderNumber, date, orderValue } = order;
 
   const heading = useMemo(() => {

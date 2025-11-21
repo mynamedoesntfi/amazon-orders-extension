@@ -1,5 +1,5 @@
 import type { OrderItem } from "../model/OrderItem";
-import type { OrderData } from "../model/OrderData";
+import type { Order } from "../model/Order";
 
 function getTextContent(element: Element | null): string {
   return element?.textContent?.trim() ?? "";
@@ -161,7 +161,7 @@ function extractOrderItems(container: Element): OrderItem[] {
 /**
  * Extract order data from an order card element (div.order-card.js-order-card)
  */
-function extractOrderData(orderCard: Element): OrderData {
+function extractOrderData(orderCard: Element): Order {
   // Extract order ID from order header
   let orderNumber = "";
   const orderNumberContainer = orderCard.querySelector('.yohtmlc-order-id');
@@ -271,8 +271,8 @@ function extractOrderData(orderCard: Element): OrderData {
 /**
  * Scrape orders from the Amazon orders page
  */
-export function scrapeOrders(): OrderData[] {
-  const orders: OrderData[] = [];
+export function scrapeOrders(): Order[] {
+  const orders: Order[] = [];
   
   // Find all order cards
   const orderCards = document.querySelectorAll('.order-card.js-order-card');

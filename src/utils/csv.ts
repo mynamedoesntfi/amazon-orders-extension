@@ -1,4 +1,4 @@
-import type { OrderData } from "../model/OrderData";
+import type { Order } from "../model/Order";
 
 export function escapeCsvField(field: string): string {
   if (!field) return "";
@@ -9,7 +9,7 @@ export function escapeCsvField(field: string): string {
   return field;
 }
 
-export function convertOrdersToCsv(orders: OrderData[]): string {
+export function convertOrdersToCsv(orders: Order[]): string {
   if (orders.length === 0) {
     return "";
   }
@@ -59,7 +59,7 @@ export function convertOrdersToCsv(orders: OrderData[]): string {
   return csvContent;
 }
 
-export function generateCsvExport(orders: OrderData[]): {
+export function generateCsvExport(orders: Order[]): {
   csvContent: string;
   filename: string;
 } {

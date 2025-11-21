@@ -1,5 +1,5 @@
 import React, { useState, useCallback, useMemo } from "react";
-import type { OrderData } from "../model/OrderData";
+import type { Order } from "../model/Order";
 import { generateCsvExport } from "../utils/csv";
 import { exportToGoogleDrive } from "../utils/googleDrive";
 import "./ExportComponent.css";
@@ -7,7 +7,7 @@ import "./ExportComponent.css";
 type Status = "idle" | "loading" | "ready" | "error";
 
 interface ExportComponentProps {
-  orders: OrderData[];
+  orders: Order[];
   status: Status;
 }
 

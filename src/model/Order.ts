@@ -1,6 +1,6 @@
 import type { OrderItem } from "./OrderItem";
 
-export type OrderData = {
+export type Order = {
   orderNumber?: string;
   items: OrderItem[];
   date?: string;
