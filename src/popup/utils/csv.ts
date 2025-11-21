@@ -1,4 +1,4 @@
-import type { CartItem } from "../../content";
+import type { OrderData } from "../../content";
 
 export function escapeCsvField(field: string): string {
   if (!field) return "";
@@ -9,31 +9,46 @@ export function escapeCsvField(field: string): string {
   return field;
 }
 
-export function convertToCsv(items: CartItem[]): string {
-  if (items.length === 0) {
+export function convertOrdersToCsv(orders: OrderData[]): string {
+  if (orders.length === 0) {
     return "";
   }
 
-  // CSV header
+  // CSV header - includes order info and item info
   const headers = [
-    "Title",
-    "Price",
-    "Quantity",
-    "Total",
+    "Order #",
+    "Order Date",
+    "Order Value",
+    "Item Title",
+    "Item Price",
+    "Item Quantity",
     "Product URL",
     "Image URL",
   ];
 
-  // CSV rows
-  const rows = items.map((item) => [
-    escapeCsvField(item.title),
-    escapeCsvField(item.price),
-    item.quantity.toString(),
-    // TODO: wtf is this item.total || item.price? where is item.total calculated?
-    escapeCsvField(item.total || item.price),
-    escapeCsvField(item.productUrl),
-    escapeCsvField(item.imageUrl),
-  ]);
+  // Flatten orders into rows - each row is an item with its order info
+  const rows: string[][] = [];
+  
+  orders.forEach((order) => {
+    // Format order number - remove "Order #" prefix if present
+    const orderNumber = order.orderNumber ? order.orderNumber.replace(/Order\s*#\s*/i, "").trim() : "";
+    const orderDate = order.date || "";
+    const orderTotal = order.orderValue || "";
+
+    // Create a row for each item in the order
+    order.items.forEach((item) => {
+      rows.push([
+        escapeCsvField(orderNumber),
+        escapeCsvField(orderDate),
+        escapeCsvField(orderTotal),
+        escapeCsvField(item.title),
+        escapeCsvField(item.price),
+        item.quantity.toString(),
+        escapeCsvField(item.productUrl),
+        escapeCsvField(item.imageUrl),
+      ]);
+    });
+  });
 
   // Combine header and rows
   const csvContent = [
@@ -44,13 +59,13 @@ export function convertToCsv(items: CartItem[]): string {
   return csvContent;
 }
 
-export function generateCsvExport(items: CartItem[]): {
+export function generateCsvExport(orders: OrderData[]): {
   csvContent: string;
   filename: string;
 } {
-  const csvContent = convertToCsv(items);
+  const csvContent = convertOrdersToCsv(orders);
   const timestamp = new Date().toISOString().replace(/[:.]/g, "-").slice(0, -5);
-  const filename = `amazon-cart-${timestamp}.csv`;
+  const filename = `amazon-orders-${timestamp}.csv`;
 
   return { csvContent, filename };
 }

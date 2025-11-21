@@ -1,14 +1,11 @@
 import React, { useMemo } from "react";
 import Order from "./Order";
+import type { OrderData } from "../../content";
 import "./OrderList.css";
 
 type Status = "idle" | "loading" | "ready" | "error";
 
-export type OrderData = {
-  id?: string;
-  items: import("../../content").CartItem[];
-  date?: string;
-};
+export type { OrderData };
 
 interface OrderListProps {
   orders: OrderData[];
@@ -54,13 +51,13 @@ const OrderList: React.FC<OrderListProps> = ({
 
       {!error && status === "ready" && orders.length === 0 ? (
         <p className="order-list__message">
-          No orders found. Open your Amazon cart page and try again.
+          No orders found. Open your Amazon orders page and try again.
         </p>
       ) : null}
 
       <div className="order-list__orders">
-        {orders.map((order) => (
-          <Order key={order.id || "order"} items={order.items} />
+        {orders.map((order, index) => (
+          <Order key={order.orderNumber || `order-${index}`} order={order} orderNumber={index + 1} />
         ))}
       </div>
     </section>

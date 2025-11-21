@@ -1,29 +1,27 @@
 import React, { useMemo } from "react";
-import type { CartItem } from "../../content";
+import type { OrderData } from "../../content";
 import OrderItem from "./OrderItem";
-import { formatCurrency, parseCurrency } from "../utils/currency";
 import "./Order.css";
 
 interface OrderProps {
-  items: CartItem[];
+  order: OrderData;
+  orderNumber?: number;
 }
 
-const Order: React.FC<OrderProps> = ({ items }) => {
+const Order: React.FC<OrderProps> = ({ order, orderNumber: displayNumber }) => {
+  const { items, orderNumber, date, orderValue } = order;
+
   const heading = useMemo(() => {
-    return `Order items (${items.length})`;
-  }, [items.length]);
+    const prefix = displayNumber ? `${displayNumber}. ` : "";
+    return `${prefix}Order items (${items.length})`;
+  }, [items.length, displayNumber]);
 
-  const subtotal = useMemo(() => {
-    return items.reduce((sum, item) => {
-      const priceText = item.total || item.price;
-      const price = parseCurrency(priceText);
-      const quantity = Number.isFinite(item.quantity) ? item.quantity : 1;
-      return sum + price * quantity;
-    }, 0);
-  }, [items]);
-
-  const showSubtotal = items.length > 0;
-  const formattedSubtotal = formatCurrency(subtotal);
+  // Format order number - remove "Order #" prefix if present
+  const formattedOrderNumber = useMemo(() => {
+    if (!orderNumber) return "";
+    // Remove "Order #" and any leading/trailing whitespace
+    return orderNumber.replace(/Order\s*#\s*/i, "").trim();
+  }, [orderNumber]);
 
   return (
     <section className="order">
@@ -31,12 +29,26 @@ const Order: React.FC<OrderProps> = ({ items }) => {
         <h2>{heading}</h2>
       </header>
 
-      {showSubtotal ? (
-        <p className="order__subtotal order__subtotal--top">
-          Subtotal ({items.length} item{items.length > 1 ? "s" : ""}):{" "}
-          <span>{formattedSubtotal}</span>
-        </p>
-      ) : null}
+      {(formattedOrderNumber || date || orderValue) && (
+        <div className="order__info">
+          {formattedOrderNumber && (
+            <p className="order__info-item">
+              <span className="order__info-label">Order #:</span>{" "}
+              <span className="order__info-value">{formattedOrderNumber}</span>
+            </p>
+          )}
+          {date && (
+            <p className="order__info-item">
+              <span className="order__info-label">Order placed date:</span>{" "}
+              <span className="order__info-value">{date}</span>
+            </p>
+          )}
+          <p className="order__info-item order__info-item--total">
+            <span className="order__info-label">Order value:</span>{" "}
+            <span className="order__info-value">{orderValue || "N/A"}</span>
+          </p>
+        </div>
+      )}
 
       <ul className="order__items">
         {items.map((item) => {
@@ -44,13 +56,6 @@ const Order: React.FC<OrderProps> = ({ items }) => {
           return <OrderItem key={key} item={item} />;
         })}
       </ul>
-
-      {showSubtotal ? (
-        <p className="order__subtotal order__subtotal--bottom">
-          Subtotal ({items.length} item{items.length > 1 ? "s" : ""}):{" "}
-          <span>{formattedSubtotal}</span>
-        </p>
-      ) : null}
     </section>
   );
 };
