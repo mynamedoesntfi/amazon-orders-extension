@@ -29,9 +29,7 @@
   "content_scripts": [
     {
       "matches": [
-        "https://*.amazon.com/gp/cart/*",
-        "https://*.amazon.com/cart/*",
-        "https://www.amazon.com/gp/cart/view.html*"
+        "https://www.amazon.com/your-orders/orders*"
       ],
       "js": [
         "content/index.js"

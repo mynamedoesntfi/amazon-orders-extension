@@ -44,7 +44,7 @@ Since content scripts run in the page context, they can access Amazon images wit
    };
    ```
 
-3. **Update CartListItem component** to prefer data URL:
+3. **Update OrderItem component** to prefer data URL:
    ```tsx
    {item.imageDataUrl ? (
      <img src={item.imageDataUrl} alt={item.title} />
