@@ -104,8 +104,7 @@ const ExportComponent: React.FC<ExportComponentProps> = ({ orders, status }) => 
 
   // Only disable if loading or no orders/items
   const isDisabledPC = status === "loading" || orders.length === 0 || totalItems === 0;
-  // Keep Google Drive disabled for now
-  const isDisabledGoogleDrive = true;
+  const isDisabledGoogleDrive = status === "loading" || orders.length === 0 || totalItems === 0;
 
   return (
     <div className="export-component">
