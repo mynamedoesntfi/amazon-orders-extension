@@ -1,9 +1,9 @@
 import React from "react";
 import "./App.css";
-import OrderList from "./components/OrderList";
-import ExportComponent from "./components/ExportComponent";
-import SignOutButton from "./components/SignOutButton";
-import { useOrders } from "./hooks/useOrders";
+import OrderList from "../components/OrderList";
+import ExportComponent from "../components/ExportComponent";
+import SignOutButton from "../components/SignOutButton";
+import { useOrders } from "../hooks/useOrders";
 
 const App: React.FC = () => {
   const { orders, status, error, loadOrders } = useOrders();

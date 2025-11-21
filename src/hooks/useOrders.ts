@@ -1,5 +1,5 @@
 import { useState, useCallback, useEffect } from "react";
-import type { OrderData } from "../../content";
+import type { OrderData } from "../model/OrderData";
 
 type Status = "idle" | "loading" | "ready" | "error";
 

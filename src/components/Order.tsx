@@ -1,5 +1,5 @@
 import React, { useMemo } from "react";
-import type { OrderData } from "../../content";
+import type { OrderData } from "../model/OrderData";
 import OrderItem from "./OrderItem";
 import "./Order.css";
 

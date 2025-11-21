@@ -1,6 +1,6 @@
 import React, { useMemo } from "react";
 import Order from "./Order";
-import type { OrderData } from "../../content";
+import type { OrderData } from "../model/OrderData";
 import "./OrderList.css";
 
 type Status = "idle" | "loading" | "ready" | "error";

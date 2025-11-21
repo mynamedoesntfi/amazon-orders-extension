@@ -1,5 +1,5 @@
 import React, { useState, useCallback, useMemo } from "react";
-import type { OrderData } from "../../content";
+import type { OrderData } from "../model/OrderData";
 import { generateCsvExport } from "../utils/csv";
 import { exportToGoogleDrive } from "../utils/googleDrive";
 import "./ExportComponent.css";

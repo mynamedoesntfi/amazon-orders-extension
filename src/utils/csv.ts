@@ -1,4 +1,4 @@
-import type { OrderData } from "../../content";
+import type { OrderData } from "../model/OrderData";
 
 export function escapeCsvField(field: string): string {
   if (!field) return "";
