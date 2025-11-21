@@ -1,10 +1,10 @@
-# CART Chrome Extension
+# Amazon Orders Extension
 
-Scaffold for a Chrome extension that exports Amazon cart data to CSV.
+Chrome extension that exports Amazon cart data to CSV.
 
 ## Project Layout
 ```
-cart-chrome-extension/
+amazon-orders-extension/
 ├── manifest.json            # Extension manifest (MV3)
 ├── public/
 │   ├── icons/               # Placeholder for extension icons

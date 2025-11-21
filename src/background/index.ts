@@ -1,5 +1,5 @@
 chrome.runtime.onInstalled.addListener(() => {
-  console.log("[CART] Extension scaffold installed.");
+  console.log("[Amazon Orders Extension] Extension scaffold installed.");
 });
 
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {

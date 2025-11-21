@@ -1,6 +1,6 @@
 # Further Developments
 
-This document tracks future improvements, bug fixes, and feature enhancements for the CART extension.
+This document tracks future improvements, bug fixes, and feature enhancements for the Amazon Orders Extension.
 
 ## Tickets
 
@@ -32,11 +32,11 @@ Since content scripts run in the page context, they can access Amazon images wit
 1. **Modify content script** to fetch image data:
    - When scraping cart items, fetch each image via `fetch()` in the content script context
    - Convert images to base64 data URLs or blob URLs
-   - Include the processed image data in the `CartItem` response
+   - Include the processed image data in the `OrderItem` response
 
-2. **Update CartItem type** to support both URL and data URL:
+2. **Update OrderItem type** to support both URL and data URL:
    ```typescript
-   export type CartItem = {
+   export type OrderItem = {
      title: string;
      imageUrl: string;        // Original URL (fallback)
      imageDataUrl?: string;    // Base64 data URL (preferred)
@@ -44,7 +44,7 @@ Since content scripts run in the page context, they can access Amazon images wit
    };
    ```
 
-3. **Update CartListItem component** to prefer data URL:
+3. **Update OrderItem component** to prefer data URL:
    ```tsx
    {item.imageDataUrl ? (
      <img src={item.imageDataUrl} alt={item.title} />

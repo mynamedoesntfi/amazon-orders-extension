@@ -1,28 +1,28 @@
 import React from "react";
 import "./App.css";
-import CartList from "./components/CartList";
-import ExportComponent from "./components/ExportComponent";
-import SignOutButton from "./components/SignOutButton";
-import { useCartItems } from "./hooks/useCartItems";
+import OrderList from "../components/OrderList";
+import ExportComponent from "../components/ExportComponent";
+import SignOutButton from "../components/SignOutButton";
+import { useOrders } from "../hooks/useOrders";
 
 const App: React.FC = () => {
-  const { items, status, error, loadItems } = useCartItems();
+  const { orders, status, error, loadOrders } = useOrders();
 
   return (
     <main className="popup">
       <header className="popup__header">
-        <h1>CART</h1>
+        <h1>Amazon Orders</h1>
         <SignOutButton />
       </header>
       <section className="popup__actions">
-        <ExportComponent items={items} status={status} />
+        <ExportComponent orders={orders} status={status} />
       </section>
 
-      <CartList
-        items={items}
+      <OrderList
+        orders={orders}
         status={status}
         error={error}
-        onRefresh={loadItems}
+        onRefresh={loadOrders}
       />
     </main>
   );

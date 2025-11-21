@@ -1,11 +1,11 @@
 {
   "manifest_version": 3,
-  "name": "CART",
+  "name": "Amazon Orders Extension",
   "description": "Export Amazon cart data to CSV",
   "version": "0.1.0",
   "action": {
     "default_popup": "popup.html",
-    "default_title": "CART"
+    "default_title": "Amazon Orders Extension"
   },
   "permissions": [
     "activeTab",
@@ -17,7 +17,7 @@
     "https://oauth2.googleapis.com/*"
   ],
   "oauth2": {
-    "client_id": "946635487950-m0lvfb5981k8t20rgd2lq4slkri3k82h.apps.googleusercontent.com",
+    "client_id": "480022033266-bum80179g229dv8se0uprrf83gh92b92.apps.googleusercontent.com",
     "scopes": [
       "https://www.googleapis.com/auth/drive.file"
     ]
@@ -29,9 +29,7 @@
   "content_scripts": [
     {
       "matches": [
-        "https://*.amazon.com/gp/cart/*",
-        "https://*.amazon.com/cart/*",
-        "https://www.amazon.com/gp/cart/view.html*"
+        "https://www.amazon.com/your-orders/orders*"
       ],
       "js": [
         "content/index.js"

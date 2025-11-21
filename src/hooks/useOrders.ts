@@ -1,15 +1,15 @@
 import { useState, useCallback, useEffect } from "react";
-import type { CartItem } from "../../content";
+import type { Order } from "../model/Order";
 
 type Status = "idle" | "loading" | "ready" | "error";
 
 type ScrapeResponse =
   | {
-      items: CartItem[];
+      orders: Order[];
       error?: undefined;
     }
   | {
-      items?: undefined;
+      orders?: undefined;
       error: string;
     };
 
@@ -23,7 +23,7 @@ async function getActiveTabId(): Promise<number> {
       const [tab] = tabs;
       if (!tab?.id) {
         reject(
-          new Error("Open your Amazon cart tab and try again.")
+          new Error("Open your Amazon orders tab and try again.")
         );
         return;
       }
@@ -32,12 +32,12 @@ async function getActiveTabId(): Promise<number> {
   });
 }
 
-async function requestCartItems(): Promise<CartItem[]> {
+async function requestOrders(): Promise<Order[]> {
   const tabId = await getActiveTabId();
-  return new Promise<CartItem[]>((resolve, reject) => {
+  return new Promise<Order[]>((resolve, reject) => {
     chrome.tabs.sendMessage(
       tabId,
-      { type: "SCRAPE_CART" },
+      { type: "SCRAPE_ORDERS" },
       (response: ScrapeResponse | undefined) => {
         if (chrome.runtime.lastError) {
           reject(new Error(chrome.runtime.lastError.message));
@@ -51,42 +51,42 @@ async function requestCartItems(): Promise<CartItem[]> {
           reject(new Error(response.error));
           return;
         }
-        resolve(response.items ?? []);
+        resolve(response.orders ?? []);
       }
     );
   });
 }
 
-export function useCartItems() {
+export function useOrders() {
   const [status, setStatus] = useState<Status>("idle");
-  const [items, setItems] = useState<CartItem[]>([]);
+  const [orders, setOrders] = useState<Order[]>([]);
   const [error, setError] = useState<string | null>(null);
 
-  const loadItems = useCallback(async () => {
+  const loadOrders = useCallback(async () => {
     setStatus("loading");
     setError(null);
     try {
-      const cartItems = await requestCartItems();
-      setItems(cartItems);
+      const orderData = await requestOrders();
+      setOrders(orderData);
       setStatus("ready");
     } catch (err) {
-      setItems([]);
+      setOrders([]);
       setError(
-        err instanceof Error ? err.message : "Unable to load cart items."
+        err instanceof Error ? err.message : "Unable to load orders."
       );
       setStatus("error");
     }
   }, []);
 
   useEffect(() => {
-    void loadItems();
-  }, [loadItems]);
+    void loadOrders();
+  }, [loadOrders]);
 
   return {
-    items,
+    orders,
     status,
     error,
-    loadItems,
+    loadOrders,
   };
 }
 

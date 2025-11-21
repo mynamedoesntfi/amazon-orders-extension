@@ -1,5 +1,5 @@
-import React, { useState, useCallback } from "react";
-import type { CartItem } from "../../content";
+import React, { useState, useCallback, useMemo } from "react";
+import type { Order } from "../model/Order";
 import { generateCsvExport } from "../utils/csv";
 import { exportToGoogleDrive } from "../utils/googleDrive";
 import "./ExportComponent.css";
@@ -7,7 +7,7 @@ import "./ExportComponent.css";
 type Status = "idle" | "loading" | "ready" | "error";
 
 interface ExportComponentProps {
-  items: CartItem[];
+  orders: Order[];
   status: Status;
 }
 
@@ -23,25 +23,30 @@ function downloadCsvToPC(csvContent: string, filename: string): void {
   URL.revokeObjectURL(url);
 }
 
-const ExportComponent: React.FC<ExportComponentProps> = ({ items, status }) => {
+const ExportComponent: React.FC<ExportComponentProps> = ({ orders, status }) => {
   const [isExportingToPC, setIsExportingToPC] = useState(false);
   const [isExportingToGoogleDrive, setIsExportingToGoogleDrive] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
+
+  // Count total items across all orders
+  const totalItems = useMemo(() => {
+    return orders.reduce((sum, order) => sum + order.items.length, 0);
+  }, [orders]);
 
   const handleExportToPC = useCallback(async () => {
     setError(null);
     setSuccessMessage(null);
     setIsExportingToPC(true);
 
-    if (items.length === 0) {
-      setError("No items to export. Please load your cart first.");
+    if (orders.length === 0 || totalItems === 0) {
+      setError("No orders to export. Please load your orders first.");
       setIsExportingToPC(false);
       return;
     }
 
     try {
-      const { csvContent, filename } = generateCsvExport(items);
+      const { csvContent, filename } = generateCsvExport(orders);
 
       // Small delay to show green state
       await new Promise(resolve => setTimeout(resolve, 100));
@@ -63,21 +68,21 @@ const ExportComponent: React.FC<ExportComponentProps> = ({ items, status }) => {
           : "Failed to export cart data to CSV."
       );
     }
-  }, [items]);
+  }, [orders, totalItems]);
 
   const handleExportToGoogleDrive = useCallback(async () => {
     setError(null);
     setSuccessMessage(null);
     setIsExportingToGoogleDrive(true);
 
-    if (items.length === 0) {
-      setError("No items to export. Please load your cart first.");
+    if (orders.length === 0 || totalItems === 0) {
+      setError("No orders to export. Please load your orders first.");
       setIsExportingToGoogleDrive(false);
       return;
     }
 
     try {
-      const { csvContent, filename } = generateCsvExport(items);
+      const { csvContent, filename } = generateCsvExport(orders);
 
       await exportToGoogleDrive(csvContent, filename);
       
@@ -95,9 +100,12 @@ const ExportComponent: React.FC<ExportComponentProps> = ({ items, status }) => {
           : "Failed to export to Google Drive."
       );
     }
-  }, [items]);
+  }, [orders, totalItems]);
 
-  const isDisabled = status === "loading" || items.length === 0;
+  // Only disable if loading or no orders/items
+  const isDisabledPC = status === "loading" || orders.length === 0 || totalItems === 0;
+  // Keep Google Drive disabled for now
+  const isDisabledGoogleDrive = true;
 
   return (
     <div className="export-component">
@@ -108,7 +116,7 @@ const ExportComponent: React.FC<ExportComponentProps> = ({ items, status }) => {
             isExportingToGoogleDrive ? "export-component__btn--exporting" : ""
           }`}
           onClick={handleExportToGoogleDrive}
-          disabled={isDisabled || isExportingToGoogleDrive}
+          disabled={isDisabledGoogleDrive || isExportingToGoogleDrive}
         >
           Export CSV to Google Drive
         </button>
@@ -118,7 +126,7 @@ const ExportComponent: React.FC<ExportComponentProps> = ({ items, status }) => {
             isExportingToPC ? "export-component__btn--exporting" : ""
           }`}
           onClick={handleExportToPC}
-          disabled={isDisabled || isExportingToPC}
+          disabled={isDisabledPC || isExportingToPC}
         >
           Export CSV to PC
         </button>
