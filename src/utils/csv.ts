@@ -19,11 +19,10 @@ export function convertOrdersToCsv(orders: Order[]): string {
     "Order #",
     "Order Date",
     "Order Value",
+    "Status",
     "Item Title",
-    "Item Price",
     "Item Quantity",
     "Product URL",
-    "Image URL",
   ];
 
   // Flatten orders into rows - each row is an item with its order info
@@ -36,16 +35,16 @@ export function convertOrdersToCsv(orders: Order[]): string {
     const orderTotal = order.orderValue || "";
 
     // Create a row for each item in the order
+    const orderStatus = order.status || "";
     order.items.forEach((item) => {
       rows.push([
         escapeCsvField(orderNumber),
         escapeCsvField(orderDate),
         escapeCsvField(orderTotal),
+        escapeCsvField(orderStatus),
         escapeCsvField(item.title),
-        escapeCsvField(item.price),
         item.quantity.toString(),
         escapeCsvField(item.productUrl),
-        escapeCsvField(item.imageUrl),
       ]);
     });
   });

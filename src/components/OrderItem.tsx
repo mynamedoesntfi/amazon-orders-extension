@@ -31,7 +31,6 @@ const OrderItem: React.FC<OrderItemProps> = ({ item }) => {
           {item.title}
         </a>
         <div className="order-item__meta">
-          <span className="order-item__price">Price: {item.price}</span>
           <span className="order-item__quantity">
             Quantity: {item.quantity}
           </span>
