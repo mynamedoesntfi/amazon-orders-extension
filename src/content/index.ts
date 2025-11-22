@@ -1,5 +1,6 @@
 import type { OrderItem } from "../model/OrderItem";
 import type { Order } from "../model/Order";
+import { OrderStatus } from "../model/Order";
 
 function getTextContent(element: Element | null): string {
   return element?.textContent?.trim() ?? "";
@@ -61,14 +62,6 @@ function extractOrderItems(container: Element): OrderItem[] {
         imageUrl = imageElement.getAttribute('data-a-hires') || imageUrl;
       }
       
-      // Extract price - look for price information in various places
-      // Prices might not be visible in order history, so we'll try to find them
-      let price = "";
-      const priceElement = itemBox.querySelector('.a-price, [class*="price"], .a-color-price');
-      if (priceElement) {
-        price = getTextContent(priceElement);
-      }
-      
       // Extract quantity - default to 1 if not found
       let quantity = 1;
       const quantityText = itemBox.textContent || "";
@@ -83,7 +76,6 @@ function extractOrderItems(container: Element): OrderItem[] {
       items.push({
         title,
         imageUrl,
-        price,
         quantity,
         productUrl,
       });
@@ -127,13 +119,6 @@ function extractOrderItems(container: Element): OrderItem[] {
         imageUrl = imageElement.getAttribute('data-a-hires') || imageUrl;
       }
       
-      // Extract price
-      let price = "";
-      const priceElement = itemBox.querySelector('.a-price, [class*="price"], .a-color-price');
-      if (priceElement) {
-        price = getTextContent(priceElement);
-      }
-      
       // Extract quantity
       let quantity = 1;
       const quantityText = itemBox.textContent || "";
@@ -148,7 +133,6 @@ function extractOrderItems(container: Element): OrderItem[] {
       items.push({
         title,
         imageUrl,
-        price,
         quantity,
         productUrl,
       });
@@ -202,6 +186,27 @@ function extractOrderData(orderCard: Element): Order {
         const valueRow = rows[1];
         orderTotal = getTextContent(valueRow);
       }
+    }
+  }
+  
+  // Extract order status
+  let orderStatus: OrderStatus | undefined;
+  
+  // Check for Cancelled status
+  const cancelledElement = orderCard.querySelector('span.a-size-medium.delivery-box__primary-text.a-text-bold');
+  if (cancelledElement && cancelledElement.textContent?.includes('Cancelled')) {
+    orderStatus = OrderStatus.Cancelled;
+  } else {
+    // Check for Shipped status - look for span with classes a-color-secondary and a-text-caps containing "Ship to"
+    const allSpans = orderCard.querySelectorAll('span');
+    const shipToElement = Array.from(allSpans).find(span => {
+      const hasClasses = span.classList.contains('a-color-secondary') && span.classList.contains('a-text-caps');
+      const hasText = span.textContent?.includes('Ship to');
+      return hasClasses && hasText;
+    });
+    
+    if (shipToElement) {
+      orderStatus = OrderStatus.Shipped;
     }
   }
   
@@ -264,6 +269,7 @@ function extractOrderData(orderCard: Element): Order {
     orderNumber: orderNumber,
     date: orderDate,
     orderValue: orderTotal,
+    status: orderStatus,
     items,
   };
 }
