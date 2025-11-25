@@ -807,8 +807,92 @@ function findNextPageLink(doc: Document | Element = document): string | null {
 }
 
 /**
+ * Process a single page document and extract orders from it
+ */
+async function processPageDocument(doc: Document, pageNumber: number): Promise<Order[]> {
+  console.log(`Processing page ${pageNumber}...`);
+  
+  // Find all order cards on the current page/document
+  // Try multiple selectors in case Amazon changes the class
+  let orderCards = doc.querySelectorAll('.order-card.js-order-card');
+  
+  // If no cards found with standard selector, try fallback selectors
+  if (orderCards.length === 0) {
+    console.warn(`No order cards found on page ${pageNumber} with standard selector. Trying fallbacks...`);
+    orderCards = doc.querySelectorAll('.js-order-card, .order-card');
+  }
+  
+  console.log(`Found ${orderCards.length} orders on page ${pageNumber}`);
+  
+  const pageOrders: Order[] = [];
+  
+  // Process each order card (must be sequential to avoid overwhelming with requests)
+  for (const orderCard of Array.from(orderCards)) {
+    try {
+      const orderData = await extractOrderData(orderCard);
+      if (orderData.items.length > 0 || orderData.orderNumber) {
+        pageOrders.push(orderData);
+      } else {
+        console.warn(`Skipped order on page ${pageNumber}: No items or order number found.`, 
+          { hasItems: orderData.items.length > 0, hasOrderNumber: !!orderData.orderNumber });
+      }
+    } catch (error) {
+      console.error(`Error extracting order data from page ${pageNumber}:`, error);
+      // Continue with next order
+    }
+  }
+  
+  console.log(`Successfully extracted ${pageOrders.length} orders from page ${pageNumber}`);
+  return pageOrders;
+}
+
+/**
+ * Execute a page's HTML in an iframe, returning the populated document
+ */
+async function executePageInIframe(html: string, url: string, pageNumber: number): Promise<Document> {
+  // Use iframe execution for page 2+ to allow client-side decryption scripts to run
+  console.log(`Executing page ${pageNumber} HTML in iframe to allow scripts to decrypt order data...`);
+  try {
+    const doc = await executeHtmlInIframe(html, url);
+    console.log(`Successfully executed scripts in iframe for page ${pageNumber}`);
+    
+    // Validate we actually got a page with orders
+    const cardCheck = doc.querySelectorAll('.order-card.js-order-card');
+    console.log(`Parsed page ${pageNumber}. Found ${cardCheck.length} order cards.`);
+    
+    if (cardCheck.length === 0) {
+      // Sometimes Amazon redirects to a login page or bot check if scraping too fast
+      const title = doc.title;
+      console.warn(`Parsed page ${pageNumber} has no orders. Title: ${title}`);
+      // Check if it's a sign-in page
+      if (title.includes('Sign-In') || doc.querySelector('form[name="signIn"]')) {
+        throw new Error('Hit sign-in wall');
+      }
+    }
+    
+    return doc;
+  } catch (iframeError) {
+    console.warn(`Iframe execution failed for page ${pageNumber}, falling back to DOMParser:`, iframeError);
+    // Fallback to DOMParser if iframe execution fails
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(html, 'text/html');
+    
+    // Validate fallback result
+    const cardCheck = doc.querySelectorAll('.order-card.js-order-card');
+    if (cardCheck.length === 0) {
+      const title = doc.title;
+      if (title.includes('Sign-In') || doc.querySelector('form[name="signIn"]')) {
+        throw new Error('Hit sign-in wall');
+      }
+    }
+    
+    return doc;
+  }
+}
+
+/**
  * Scrape orders from the Amazon orders page
- * Updated to handle async order extraction with pagination (both internal items and order history pages)
+ * Updated to handle concurrent prefetching and iframe execution for pages 2+
  */
 export async function scrapeOrders(): Promise<Order[]> {
   // Ensure we're on the first page before extracting data
@@ -820,90 +904,129 @@ export async function scrapeOrders(): Promise<Order[]> {
   }
   
   const allOrders: Order[] = [];
-  let currentDoc: Document = document;
-  let nextUrl: string | null = null;
-  let pageCount = 0;
   const MAX_PAGES = 10; // Safety limit
+  const MAX_CONCURRENT_IFRAMES = 2; // Limit concurrent iframe executions
   
-  do {
-    pageCount++;
-    console.log(`Scraping page ${pageCount}...`);
-    
-    // Find all order cards on the current page/document
-    // Try multiple selectors in case Amazon changes the class
-    let orderCards = currentDoc.querySelectorAll('.order-card.js-order-card');
-    
-    // If no cards found with standard selector, try fallback selectors
-    if (orderCards.length === 0) {
-      console.warn(`No order cards found on page ${pageCount} with standard selector. Trying fallbacks...`);
-      orderCards = currentDoc.querySelectorAll('.js-order-card, .order-card');
+  // Process page 1 (current document)
+  console.log(`Scraping page 1...`);
+  const page1Orders = await processPageDocument(document, 1);
+  allOrders.push(...page1Orders);
+  console.log(`Total orders after page 1: ${allOrders.length}`);
+  
+  // Discover all available page URLs by following pagination links
+  // Cache HTML during discovery to avoid double-fetching
+  const pageData: Array<{ url: string; pageNumber: number; html: string | null }> = [];
+  let currentDoc: Document = document;
+  let discoveredPages = 1;
+  
+  // Discover up to MAX_PAGES - 1 more pages (since we already processed page 1)
+  // We need to fetch each page to find the "next" link, so we cache the HTML for later use
+  while (discoveredPages < MAX_PAGES) {
+    const nextUrl = findNextPageLink(currentDoc);
+    if (!nextUrl) {
+      break; // No more pages
     }
     
-    console.log(`Found ${orderCards.length} orders on page ${pageCount}`);
+    discoveredPages++;
     
-    // Process each order card (must be sequential to avoid overwhelming with requests)
-    let pageOrdersAdded = 0;
-    for (const orderCard of Array.from(orderCards)) {
-      try {
-        const orderData = await extractOrderData(orderCard);
-        console.log(`Order data: ${JSON.stringify(orderData)}`);
-        if (orderData.items.length > 0 || orderData.orderNumber) {
-          allOrders.push(orderData);
-          pageOrdersAdded++;
-        } else {
-           console.warn(`Skipped order on page ${pageCount}: No items or order number found.`, 
-             { hasItems: orderData.items.length > 0, hasOrderNumber: !!orderData.orderNumber });
-        }
-      } catch (error) {
-        console.error('Error extracting order data:', error);
-        // Continue with next order
+    // Fetch the page to discover the next page URL and cache the HTML
+    try {
+      const html = await fetchPageHtml(nextUrl);
+      pageData.push({ url: nextUrl, pageNumber: discoveredPages, html });
+      
+      const parser = new DOMParser();
+      currentDoc = parser.parseFromString(html, 'text/html');
+      
+      // Check if we hit a sign-in wall
+      const title = currentDoc.title;
+      if (title.includes('Sign-In') || currentDoc.querySelector('form[name="signIn"]')) {
+        console.warn('Hit sign-in wall during page discovery. Stopping discovery.');
+        break;
       }
+    } catch (error) {
+      console.warn(`Failed to discover next page after ${discoveredPages}:`, error);
+      // Still add the URL even if fetch failed, we'll handle it later
+      pageData.push({ url: nextUrl, pageNumber: discoveredPages, html: null });
+      break;
     }
-    console.log(`Successfully added ${pageOrdersAdded} orders from page ${pageCount}. Total orders: ${allOrders.length}`);
-    
-    // Check for next page
-    nextUrl = findNextPageLink(currentDoc);
-    
-    if (nextUrl && pageCount < MAX_PAGES) {
-      try {
-        console.log(`Fetching next page: ${nextUrl}`);
-        const html = await fetchPageHtml(nextUrl);
-        
-        // Use iframe execution for page 2+ to allow client-side decryption scripts to run
-        console.log(`Executing page ${pageCount + 1} HTML in iframe to allow scripts to decrypt order data...`);
-        try {
-          currentDoc = await executeHtmlInIframe(html, nextUrl);
-          console.log(`Successfully executed scripts in iframe for page ${pageCount + 1}`);
-        } catch (iframeError) {
-          console.warn(`Iframe execution failed for page ${pageCount + 1}, falling back to DOMParser:`, iframeError);
-          // Fallback to DOMParser if iframe execution fails
-          const parser = new DOMParser();
-          currentDoc = parser.parseFromString(html, 'text/html');
-        }
-        
-        // Validate we actually got a page with orders
-        const cardCheck = currentDoc.querySelectorAll('.order-card.js-order-card');
-        console.log(`Parsed next page. Found ${cardCheck.length} order cards.`);
-        
-        if (cardCheck.length === 0) {
-           // Sometimes Amazon redirects to a login page or bot check if scraping too fast
-           const title = currentDoc.title;
-           console.warn(`Parsed page has no orders. Title: ${title}`);
-           // Check if it's a sign-in page
-           if (title.includes('Sign-In') || currentDoc.querySelector('form[name="signIn"]')) {
-             console.error('Hit sign-in wall. Stopping scrape.');
-             break;
-           }
-        }
-      } catch (error) {
-        console.error(`Failed to fetch next page ${nextUrl}:`, error);
-        break; // Stop if we can't fetch the next page
-      }
+  }
+  
+  if (pageData.length === 0) {
+    console.log('No additional pages to process.');
+    return allOrders;
+  }
+  
+  console.log(`Discovered ${pageData.length} additional pages. Starting concurrent execution...`);
+  
+  // Use cached HTML where available, or fetch missing ones in parallel
+  const htmlPromises = pageData.map(({ url, pageNumber, html }) => {
+    if (html) {
+      // Use cached HTML
+      return Promise.resolve(html);
     } else {
-      nextUrl = null; // Stop loop
+      /**
+       * Fetch missing HTML if unresolved from execution of the below mentioned line
+       * 
+       * const html = await fetchPageHtml(nextUrl);
+       * 
+       * This is located in while loop above where the html for all subsequent pages is fetched and stored in pageData array
+       */
+      return fetchPageHtml(url).catch(error => {
+        console.error(`Failed to fetch page ${pageNumber}:`, error);
+        return null;
+      });
+    }
+  });
+  
+  /*
+   * Resolves all the promises to get the html for all subsequent pages
+  */
+  const htmlResults = await Promise.all(htmlPromises);
+  
+  // Create tasks for iframe execution (with HTML and metadata)
+  const executionTasks = htmlResults
+    .map((html, index) => {
+      if (!html) return null; // Skip failed fetches
+      return {
+        html,
+        url: pageData[index].url,
+        pageNumber: pageData[index].pageNumber,
+      };
+    })
+    .filter((task): task is NonNullable<typeof task> => task !== null);
+  
+  // Execute iframes concurrently with limit
+  const executedDocs: Array<{ doc: Document; pageNumber: number } | null> = [];
+  
+  // Process in batches to limit concurrent iframes
+  for (let i = 0; i < executionTasks.length; i += MAX_CONCURRENT_IFRAMES) {
+    const batch = executionTasks.slice(i, i + MAX_CONCURRENT_IFRAMES);
+    console.log(`Executing batch of ${batch.length} iframes (pages ${batch[0].pageNumber}-${batch[batch.length - 1].pageNumber})...`);
+    
+    const batchPromises = batch.map(({ html, url, pageNumber }) =>
+      executePageInIframe(html, url, pageNumber)
+        .then(doc => ({ doc, pageNumber }))
+        .catch(error => {
+          console.error(`Failed to execute page ${pageNumber}:`, error);
+          return null; // Return null on error
+        })
+    );
+    
+    const batchResults = await Promise.all(batchPromises);
+    executedDocs.push(...batchResults); // Results in array of iframe execution results for each page
+  }
+  
+  // Process executed documents in order
+  for (const result of executedDocs) {
+    if (!result) {
+      continue; // Skip failed pages
     }
     
-  } while (nextUrl && pageCount < MAX_PAGES);
+    const { doc, pageNumber } = result;
+    const pageOrders = await processPageDocument(doc, pageNumber);
+    allOrders.push(...pageOrders);
+    console.log(`Total orders after page ${pageNumber}: ${allOrders.length}`);
+  }
   
   return allOrders;
 }
