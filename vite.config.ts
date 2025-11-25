@@ -1,7 +1,7 @@
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 import { resolve } from "path";
-import { copyFileSync, mkdirSync } from "fs";
+import { copyFileSync, mkdirSync, readFileSync, writeFileSync } from "fs";
 
 export default defineConfig({
   plugins: [
@@ -12,6 +12,22 @@ export default defineConfig({
         const distDir = resolve(__dirname, "dist");
         mkdirSync(distDir, { recursive: true });
         copyFileSync(resolve(__dirname, "manifest.json"), resolve(distDir, "manifest.json"));
+      },
+    },
+    {
+      name: "fix-background-script",
+      writeBundle(options) {
+        const bgPath = resolve(options.dir || "dist", "background/index.js");
+        try {
+          const content = readFileSync(bgPath, "utf8");
+          // Ensure the file ends with a newline
+          if (!content.endsWith("\n")) {
+            writeFileSync(bgPath, content + "\n", "utf8");
+          }
+        } catch (error) {
+          // File might not exist yet, that's okay
+          console.warn("Could not fix background script:", error);
+        }
       },
     },
   ],
@@ -32,6 +48,7 @@ export default defineConfig({
         },
         chunkFileNames: "assets/[name].js",
         assetFileNames: "assets/[name][extname]",
+        format: "es",
       },
     },
   },
