@@ -40,11 +40,16 @@ async function requestOrders(): Promise<Order[]> {
       { type: "SCRAPE_ORDERS" },
       (response: ScrapeResponse | undefined) => {
         if (chrome.runtime.lastError) {
-          reject(new Error(chrome.runtime.lastError.message));
+          const msg = chrome.runtime.lastError.message;
+          if (msg && msg.includes("Receiving end does not exist")) {
+            reject(new Error("Please refresh the Amazon Orders page and try again."));
+          } else {
+            reject(new Error(msg));
+          }
           return;
         }
         if (!response) {
-          reject(new Error("No response from content script."));
+          reject(new Error("No response from content script. Refresh the page."));
           return;
         }
         if ("error" in response && response.error) {
