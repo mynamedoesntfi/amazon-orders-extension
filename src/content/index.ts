@@ -195,14 +195,18 @@ function debugPageExtraction(
     debugDiv.id = 'amazon-scraper-debug';
     debugDiv.style.cssText = 'position:fixed; top:0; left:0; width:50%; height:100%; overflow:auto; background:white; z-index:99999; border:2px solid red; padding:20px; font-family:monospace; font-size:12px;';
     debugDiv.innerHTML = `
-      <div style="position:sticky; top:0; background:#f0f0f0; padding:10px; border-bottom:2px solid #ccc; margin-bottom:10px;">
+      <div id="amazon-scraper-debug-header" style="position:sticky; top:0; background:#f0f0f0; padding:10px; border-bottom:2px solid #ccc; margin-bottom:10px;">
         <h2 style="margin:0 0 10px 0;">DEBUG: Fetched Page ${pageCount} HTML</h2>
         ${pageUrl ? `<p style="margin:0; word-break:break-all;"><strong>URL:</strong> ${pageUrl}</p>` : ''}
         <p style="margin:5px 0 0 0;"><strong>HTML Length:</strong> ${fetchedHtml.length} characters</p>
         <button onclick="this.closest('#amazon-scraper-debug').remove()" style="margin-top:10px; padding:5px 15px; cursor:pointer;">Close Debug Panel</button>
       </div>
-      <pre style="white-space:pre-wrap; word-wrap:break-word; margin:0;">${fetchedHtml.substring(0, 50000)}${fetchedHtml.length > 50000 ? '\n\n... (truncated, showing first 50000 chars)' : ''}</pre>
+      <pre id="amazon-scraper-debug-pre" style="white-space:pre-wrap; word-wrap:break-word; margin:0;"></pre>
     `;
+    const preElement = debugDiv.querySelector('#amazon-scraper-debug-pre');
+    if (preElement) {
+      preElement.textContent = `${fetchedHtml.substring(0, 50000)}${fetchedHtml.length > 50000 ? '\n\n... (truncated, showing first 50000 chars)' : ''}`;
+    }
     document.body.appendChild(debugDiv);
   }
 }
