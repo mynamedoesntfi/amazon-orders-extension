@@ -164,51 +164,196 @@ async function fetchPageHtml(url: string): Promise<string> {
 }
 
 /**
- * DEBUG FUNCTION - Can be removed easily later
- * Logs order card HTML to console and optionally injects fetched HTML into page for visual inspection
+ * Check if order cards in a document are populated with actual data (not just script placeholders)
  */
-function debugPageExtraction(
-  orderCards: NodeListOf<Element>,
-  pageCount: number,
-  fetchedHtml?: string,
-  pageUrl?: string
-): void {
-  // Option 2: Log order card HTML to console
-  if (orderCards.length > 0) {
-    console.log(`=== DEBUG: Order Cards on Page ${pageCount} ===`);
-    Array.from(orderCards).forEach((card, idx) => {
-      const outerHTML = card.outerHTML || 'No outerHTML';
-      console.log(`Order card ${idx} outerHTML (first 1000 chars):`, outerHTML.substring(0, 1000));
-    });
-    console.log(`=== End DEBUG: Order Cards ===`);
+function areOrderCardsPopulated(doc: Document): boolean {
+  const orderCards = doc.querySelectorAll('.order-card.js-order-card');
+  if (orderCards.length === 0) {
+    return false;
   }
-
-  // Option 3: Inject fetched HTML into page for visual inspection
-  if (fetchedHtml) {
-    // Remove any existing debug div
-    const existingDebug = document.getElementById('amazon-scraper-debug');
-    if (existingDebug) {
-      existingDebug.remove();
+  
+  // Check if at least one order card has populated data
+  for (const card of Array.from(orderCards)) {
+    // Check for order number
+    const orderNumberContainer = card.querySelector('.yohtmlc-order-id');
+    if (orderNumberContainer) {
+      const orderNumberSpan = orderNumberContainer.querySelector('span[dir="ltr"]');
+      if (orderNumberSpan && getTextContent(orderNumberSpan).trim().length > 0) {
+        return true; // Found at least one populated order card
+      }
     }
-
-    const debugDiv = document.createElement('div');
-    debugDiv.id = 'amazon-scraper-debug';
-    debugDiv.style.cssText = 'position:fixed; top:0; left:0; width:50%; height:100%; overflow:auto; background:white; z-index:99999; border:2px solid red; padding:20px; font-family:monospace; font-size:12px;';
-    debugDiv.innerHTML = `
-      <div id="amazon-scraper-debug-header" style="position:sticky; top:0; background:#f0f0f0; padding:10px; border-bottom:2px solid #ccc; margin-bottom:10px;">
-        <h2 style="margin:0 0 10px 0;">DEBUG: Fetched Page ${pageCount} HTML</h2>
-        ${pageUrl ? `<p style="margin:0; word-break:break-all;"><strong>URL:</strong> ${pageUrl}</p>` : ''}
-        <p style="margin:5px 0 0 0;"><strong>HTML Length:</strong> ${fetchedHtml.length} characters</p>
-        <button onclick="this.closest('#amazon-scraper-debug').remove()" style="margin-top:10px; padding:5px 15px; cursor:pointer;">Close Debug Panel</button>
-      </div>
-      <pre id="amazon-scraper-debug-pre" style="white-space:pre-wrap; word-wrap:break-word; margin:0;"></pre>
-    `;
-    const preElement = debugDiv.querySelector('#amazon-scraper-debug-pre');
-    if (preElement) {
-      preElement.textContent = `${fetchedHtml.substring(0, 50000)}${fetchedHtml.length > 50000 ? '\n\n... (truncated, showing first 50000 chars)' : ''}`;
+    
+    // Check for order items
+    const itemBoxes = card.querySelectorAll('.item-box');
+    if (itemBoxes.length > 0) {
+      for (const itemBox of Array.from(itemBoxes)) {
+        const titleElement = itemBox.querySelector('.yohtmlc-product-title a, a[href*="/dp/"]');
+        if (titleElement && getTextContent(titleElement).trim().length > 0) {
+          return true; // Found at least one populated item
+        }
+      }
     }
-    document.body.appendChild(debugDiv);
   }
+  
+  return false;
+}
+
+/**
+ * Execute HTML in a sandboxed iframe and wait for scripts to populate order data
+ * Returns the populated document after scripts have executed
+ */
+async function executeHtmlInIframe(html: string, url: string): Promise<Document> {
+  const iframe = document.createElement('iframe');
+  iframe.style.display = 'none';
+  iframe.style.width = '0';
+  iframe.style.height = '0';
+  iframe.style.border = 'none';
+  
+  let observer: MutationObserver | null = null;
+  let timeoutId: number | null = null;
+  
+  return new Promise((resolve, reject) => {
+    const MAX_WAIT_TIME = 60000; // 60 seconds
+    const POLL_INTERVAL = 1000; // Check every 1 second
+    const startTime = Date.now();
+    
+    let pollInterval: number | null = null;
+    let isResolved = false;
+    
+    // Cleanup function
+    const cleanup = () => {
+      if (observer) {
+        observer.disconnect();
+        observer = null;
+      }
+      if (timeoutId !== null) {
+        clearTimeout(timeoutId);
+        timeoutId = null;
+      }
+      if (pollInterval !== null) {
+        clearInterval(pollInterval);
+        pollInterval = null;
+      }
+      if (iframe.parentNode) {
+        iframe.parentNode.removeChild(iframe);
+      }
+    };
+    
+    // Enhanced check that prevents multiple resolves
+    const safeCheckPopulated = () => {
+      if (isResolved) return true;
+      
+      try {
+        const iframeDoc = iframe.contentDocument || iframe.contentWindow?.document;
+        if (!iframeDoc) {
+          return false;
+        }
+        
+        if (areOrderCardsPopulated(iframeDoc)) {
+          isResolved = true;
+          cleanup();
+          resolve(iframeDoc);
+          return true;
+        }
+        
+        // Check if we've exceeded max wait time
+        if (Date.now() - startTime >= MAX_WAIT_TIME) {
+          if (!isResolved) {
+            isResolved = true;
+            cleanup();
+            reject(new Error(`Timeout: Order cards did not populate within ${MAX_WAIT_TIME}ms`));
+          }
+          return true;
+        }
+        
+        return false;
+      } catch (error) {
+        // Cross-origin or other iframe access error
+        console.warn('Error accessing iframe document:', error);
+        // Don't reject immediately - might be temporary, let timeout handle it
+        return false;
+      }
+    };
+    
+    // Set up iframe load handler
+    iframe.onload = () => {
+      // Wait a bit for scripts to start executing
+      setTimeout(() => {
+        // Start polling for populated order cards
+        pollInterval = window.setInterval(() => {
+          safeCheckPopulated();
+        }, POLL_INTERVAL);
+        
+        // Set overall timeout
+        timeoutId = window.setTimeout(() => {
+          if (!isResolved) {
+            isResolved = true;
+            cleanup();
+            reject(new Error(`Timeout: Order cards did not populate within ${MAX_WAIT_TIME}ms`));
+          }
+        }, MAX_WAIT_TIME);
+        
+        // Also try MutationObserver for faster detection
+        try {
+          const iframeDoc = iframe.contentDocument || iframe.contentWindow?.document;
+          if (iframeDoc) {
+            observer = new MutationObserver(() => {
+              safeCheckPopulated();
+            });
+            
+            observer.observe(iframeDoc.body || iframeDoc.documentElement, {
+              childList: true,
+              subtree: true,
+            });
+          }
+        } catch (error) {
+          // MutationObserver might fail, fall back to polling only
+          console.warn('Could not set up MutationObserver:', error);
+        }
+      }, 500); // Small delay to let iframe initialize
+    };
+    
+    iframe.onerror = () => {
+      if (!isResolved) {
+        isResolved = true;
+        cleanup();
+        reject(new Error('Iframe failed to load'));
+      }
+    };
+    
+    // Append iframe to document
+    try {
+      document.body.appendChild(iframe);
+    } catch (error) {
+      cleanup();
+      reject(new Error(`Failed to append iframe to document: ${error}`));
+      return;
+    }
+    
+    // Write HTML to iframe using srcdoc (more reliable than contentDocument.write)
+    try {
+      // Use srcdoc attribute which is more reliable and handles CSP better
+      iframe.srcdoc = html;
+    } catch (error) {
+      // Fallback: try contentDocument.write if srcdoc fails
+      try {
+        const iframeDoc = iframe.contentDocument || iframe.contentWindow?.document;
+        if (iframeDoc) {
+          iframeDoc.open();
+          iframeDoc.write(html);
+          iframeDoc.close();
+        } else {
+          throw new Error('Cannot access iframe document');
+        }
+      } catch (writeError) {
+        if (!isResolved) {
+          isResolved = true;
+          cleanup();
+          reject(new Error(`Failed to write HTML to iframe: ${writeError}`));
+        }
+      }
+    }
+  });
 }
 
 /**
@@ -696,9 +841,6 @@ export async function scrapeOrders(): Promise<Order[]> {
     
     console.log(`Found ${orderCards.length} orders on page ${pageCount}`);
     
-    // DEBUG: Log order card HTML and inject fetched HTML if available
-    debugPageExtraction(orderCards, pageCount);
-    
     // Process each order card (must be sequential to avoid overwhelming with requests)
     let pageOrdersAdded = 0;
     for (const orderCard of Array.from(orderCards)) {
@@ -726,15 +868,22 @@ export async function scrapeOrders(): Promise<Order[]> {
       try {
         console.log(`Fetching next page: ${nextUrl}`);
         const html = await fetchPageHtml(nextUrl);
-        const parser = new DOMParser();
-        currentDoc = parser.parseFromString(html, 'text/html');
+        
+        // Use iframe execution for page 2+ to allow client-side decryption scripts to run
+        console.log(`Executing page ${pageCount + 1} HTML in iframe to allow scripts to decrypt order data...`);
+        try {
+          currentDoc = await executeHtmlInIframe(html, nextUrl);
+          console.log(`Successfully executed scripts in iframe for page ${pageCount + 1}`);
+        } catch (iframeError) {
+          console.warn(`Iframe execution failed for page ${pageCount + 1}, falling back to DOMParser:`, iframeError);
+          // Fallback to DOMParser if iframe execution fails
+          const parser = new DOMParser();
+          currentDoc = parser.parseFromString(html, 'text/html');
+        }
         
         // Validate we actually got a page with orders
         const cardCheck = currentDoc.querySelectorAll('.order-card.js-order-card');
         console.log(`Parsed next page. Found ${cardCheck.length} order cards.`);
-        
-        // DEBUG: Log fetched HTML and inject into page for inspection
-        debugPageExtraction(cardCheck, pageCount + 1, html, nextUrl);
         
         if (cardCheck.length === 0) {
            // Sometimes Amazon redirects to a login page or bot check if scraping too fast
