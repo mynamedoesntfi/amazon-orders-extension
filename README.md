@@ -114,6 +114,10 @@ The extension uses a content script that:
 - **CSV Format**: Standard comma-separated values with order and item details
 - **Google Drive**: Uses OAuth 2.0 to authenticate and upload files
 
+### Architecture
+
+For a detailed visual representation of the extension's architecture, including component interactions, data flow, and message passing, see [diagram.txt](diagram.txt).
+
 ## Configuration
 
 ### Google Drive Setup
@@ -178,6 +182,7 @@ For issues, questions, or feature requests, please open an issue on GitHub.
 
 ## Related Documentation
 
+- [Architecture Diagram](diagram.txt) - Visual ASCII diagram of the extension's architecture and data flow
 - [Steps to Production](steps_to_production.md) - Guide for publishing to Chrome Web Store
 - [Solution to Next Page Data Retrieval](solution_to_next_page_data_retrieval_problem.md) - Technical details on pagination handling
 
