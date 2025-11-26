@@ -1,6 +1,6 @@
 # Privacy Policy for Amazon Orders Extension
 
-**Last Updated:** January 2025
+**Last Updated:** November 26, 2025
 
 ## Introduction
 
