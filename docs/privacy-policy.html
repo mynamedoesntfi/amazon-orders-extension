@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Privacy Policy - Amazon Orders Extension</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        h1 {
+            border-bottom: 1px solid #eee;
+            padding-bottom: 10px;
+        }
+        h2 {
+            margin-top: 30px;
+            color: #2c3e50;
+        }
+        h3 {
+            color: #34495e;
+        }
+        ul {
+            padding-left: 20px;
+        }
+        li {
+            margin-bottom: 5px;
+        }
+        .last-updated {
+            color: #666;
+            font-style: italic;
+        }
+        .contact-box {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 5px;
+            border: 1px solid #e9ecef;
+        }
+        a {
+            color: #0366d6;
+            text-decoration: none;
+        }
+        a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <h1>Privacy Policy for Amazon Orders Extension</h1>
+    <p class="last-updated">Last Updated: January 2025</p>
+
+    <h2>Introduction</h2>
+    <p>Amazon Orders Extension ("we", "our", or "us") is committed to protecting your privacy. This Privacy Policy explains how we collect, use, share, and protect your information when you use our Chrome extension. This policy applies to all users of the Amazon Orders Extension.</p>
+
+    <h2>Information We Collect</h2>
+    <p>We collect information to provide and improve our services. The types of information we collect include:</p>
+
+    <h3>1. Website Content (Order Data)</h3>
+    <ul>
+        <li><strong>What we collect:</strong> When you use the extension on Amazon's "Your Orders" pages, we extract order details including order numbers, dates, totals, shipping status, and product information (titles, images, quantities).</li>
+        <li><strong>How we collect it:</strong> The extension uses content scripts to read the HTML structure of the Amazon order pages you visit.</li>
+        <li><strong>Why we collect it:</strong> This data is collected solely to allow you to export your order history to CSV format for your own analysis and record-keeping.</li>
+    </ul>
+
+    <h3>2. Authentication Information</h3>
+    <ul>
+        <li><strong>What we collect:</strong> If you choose to use the Google Drive export feature, we use Google OAuth 2.0 authentication tokens.</li>
+        <li><strong>How we collect it:</strong> Via the Chrome Identity API and Google's OAuth service.</li>
+        <li><strong>Why we collect it:</strong> To authenticate your request to upload exported CSV files directly to your Google Drive account. We do not store your credentials.</li>
+    </ul>
+
+    <h3>3. Personal Information (Future Optional Feature)</h3>
+    <ul>
+        <li><strong>What we collect:</strong> If you opt-in to the dashboard feature, we may collect and store:
+            <ul>
+                <li><strong>Contact Information:</strong> Name, email address, and phone number (extracted from order/shipping details).</li>
+                <li><strong>Location Data:</strong> Shipping addresses and general location information.</li>
+                <li><strong>Order History:</strong> Full purchase details including order numbers and items.</li>
+            </ul>
+        </li>
+        <li><strong>How we collect it:</strong> Through secure transmission to our cloud storage, only after your explicit consent.</li>
+        <li><strong>Why we collect it:</strong> To provide advanced dashboard analytics, such as:
+            <ul>
+                <li>Spending breakdown by shipping location/address.</li>
+                <li>Purchase history analysis by recipient (family/friends).</li>
+                <li>Cross-device synchronization of your complete purchase profile.</li>
+            </ul>
+        </li>
+    </ul>
+
+    <h3>What We Do NOT Collect</h3>
+    <ul>
+        <li>We do not collect health information.</li>
+        <li>We do not collect financial information (credit card numbers, bank accounts) beyond the transaction totals visible on your order history.</li>
+        <li>We do not collect personal communications.</li>
+        <li>We do not track your web browsing history outside of Amazon order pages.</li>
+    </ul>
+
+    <h2>How We Use Your Information</h2>
+    <p>We use your information strictly for the extension's single purpose:</p>
+    <ol>
+        <li><strong>To Provide the Service:</strong>
+            <ul>
+                <li>Processing your Amazon order data to generate CSV export files.</li>
+                <li>Uploading files to your Google Drive (if authorized).</li>
+            </ul>
+        </li>
+        <li><strong>To Improve the Service:</strong>
+            <ul>
+                <li>(Future) Analyzing aggregated data to improve extraction accuracy (only with consent).</li>
+            </ul>
+        </li>
+    </ol>
+
+    <p><strong>Limited Use Policy:</strong><br>
+    Our use of information received from Google APIs will adhere to the <a href="https://developer.chrome.com/docs/webstore/program-policies/policies#user_data">Chrome Web Store User Data Policy</a>, including the Limited Use requirements. We do not use your data for advertising or other unrelated purposes.</p>
+
+    <h2>Data Sharing and Disclosure</h2>
+    <p>We do not sell your personal data. We only share data in the following limited circumstances:</p>
+    <ol>
+        <li><strong>With Service Providers:</strong>
+            <ul>
+                <li><strong>Google Drive:</strong> If you choose to export to Google Drive, your data is sent directly to Google's servers via their API.</li>
+                <li><strong>Cloud Storage (Future):</strong> If you opt-in to cloud features, data will be stored with our secure cloud provider.</li>
+            </ul>
+        </li>
+        <li><strong>Legal Requirements:</strong>
+            <ul>
+                <li>We may disclose information if required by law, such as to comply with a subpoena or legal process.</li>
+            </ul>
+        </li>
+        <li><strong>No Sale of Data:</strong>
+            <ul>
+                <li>We do not sell, trade, or rent your personal identification information to others.</li>
+                <li>We do not use your data for creditworthiness checks or lending purposes.</li>
+            </ul>
+        </li>
+    </ol>
+
+    <h2>Data Storage and Security</h2>
+    <ul>
+        <li><strong>Local Processing:</strong> Currently, all data processing happens locally within your browser. Your order data remains on your device until you choose to export it.</li>
+        <li><strong>Data Security:</strong> We use industry-standard security measures. All data transmission (e.g., to Google Drive) occurs over secure HTTPS connections.</li>
+        <li><strong>Data Retention:</strong> We do not retain your data on our servers. For future cloud features, we will retain data only as long as necessary to provide the service or until you delete it.</li>
+    </ul>
+
+    <h2>Your Rights</h2>
+    <p>You have control over your data:</p>
+    <ul>
+        <li><strong>Access:</strong> You can view all extracted data in the CSV file.</li>
+        <li><strong>Export:</strong> You can download your data at any time.</li>
+        <li><strong>Delete:</strong> Currently, no data is stored on our servers to delete. For future cloud features, you will have the ability to delete your stored data entirely.</li>
+        <li><strong>Revoke Access:</strong> You can revoke the extension's access to your Google Drive at any time via your Google Account permissions.</li>
+    </ul>
+
+    <h2>Changes to This Policy</h2>
+    <p>We may update this Privacy Policy. If we make significant changes, we will notify you through the extension or the Chrome Web Store listing. The "Last Updated" date at the top of this policy indicates when the latest changes were made.</p>
+
+    <h2>Contact Us</h2>
+    <div class="contact-box">
+        <p>If you have questions about this Privacy Policy, please contact us at:</p>
+        <ul>
+            <li><strong>GitHub:</strong> <a href="https://github.com/mynamedoesntfi/amazon-orders-extension">https://github.com/mynamedoesntfi/amazon-orders-extension</a></li>
+            <li><strong>Email:</strong> <a href="mailto:nandanbhat12799@gmail.com">nandanbhat12799@gmail.com</a></li>
+        </ul>
+    </div>
+
+    <hr>
+    <p><em><strong>Compliance:</strong> This policy is designed to comply with the Chrome Web Store Developer Program Policies.</em></p>
+</body>
+</html>
+
