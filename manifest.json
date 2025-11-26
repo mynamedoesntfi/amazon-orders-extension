@@ -14,6 +14,26 @@
   ],
   "host_permissions": [
     "https://*.amazon.com/*",
+    "https://*.amazon.co.uk/*",
+    "https://*.amazon.ca/*",
+    "https://*.amazon.de/*",
+    "https://*.amazon.fr/*",
+    "https://*.amazon.it/*",
+    "https://*.amazon.es/*",
+    "https://*.amazon.co.jp/*",
+    "https://*.amazon.in/*",
+    "https://*.amazon.com.au/*",
+    "https://*.amazon.com.br/*",
+    "https://*.amazon.com.mx/*",
+    "https://*.amazon.nl/*",
+    "https://*.amazon.ae/*",
+    "https://*.amazon.sg/*",
+    "https://*.amazon.com.tr/*",
+    "https://*.amazon.sa/*",
+    "https://*.amazon.se/*",
+    "https://*.amazon.pl/*",
+    "https://*.amazon.com.be/*",
+    "https://*.amazon.eg/*",
     "https://oauth2.googleapis.com/*"
   ],
   "oauth2": {
@@ -29,7 +49,27 @@
   "content_scripts": [
     {
       "matches": [
-        "https://www.amazon.com/your-orders/orders*"
+        "https://www.amazon.com/your-orders/orders*",
+        "https://www.amazon.co.uk/your-orders/orders*",
+        "https://www.amazon.ca/your-orders/orders*",
+        "https://www.amazon.de/your-orders/orders*",
+        "https://www.amazon.fr/your-orders/orders*",
+        "https://www.amazon.it/your-orders/orders*",
+        "https://www.amazon.es/your-orders/orders*",
+        "https://www.amazon.co.jp/your-orders/orders*",
+        "https://www.amazon.in/your-orders/orders*",
+        "https://www.amazon.com.au/your-orders/orders*",
+        "https://www.amazon.com.br/your-orders/orders*",
+        "https://www.amazon.com.mx/your-orders/orders*",
+        "https://www.amazon.nl/your-orders/orders*",
+        "https://www.amazon.ae/your-orders/orders*",
+        "https://www.amazon.sg/your-orders/orders*",
+        "https://www.amazon.com.tr/your-orders/orders*",
+        "https://www.amazon.sa/your-orders/orders*",
+        "https://www.amazon.se/your-orders/orders*",
+        "https://www.amazon.pl/your-orders/orders*",
+        "https://www.amazon.com.be/your-orders/orders*",
+        "https://www.amazon.eg/your-orders/orders*"
       ],
       "js": [
         "content/index.js"

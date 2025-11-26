@@ -11,9 +11,10 @@ function getAbsoluteUrl(href: string): string {
   if (href.startsWith("http://") || href.startsWith("https://")) {
     return href;
   }
-  // Handle relative URLs
+  // Handle relative URLs - use current domain dynamically
   if (href.startsWith("/")) {
-    return `https://www.amazon.com${href}`;
+    const currentDomain = window.location.hostname;
+    return `https://${currentDomain}${href}`;
   }
   return href;
 }
