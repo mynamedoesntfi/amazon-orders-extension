@@ -1,0 +1,187 @@
+┌─────────────────────────────────────────────────────────────────────────┐
+│                    AMAZON ORDERS EXTENSION ARCHITECTURE                 │
+└─────────────────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────────────────┐
+│                              CHROME BROWSER                             │
+└─────────────────────────────────────────────────────────────────────────┘
+
+    ┌─────────────────┐
+    │   AMAZON.COM    │
+    │  (Your Orders)  │
+    └────────┬────────┘
+             │
+             │ DOM Access
+             ▼
+    ┌──────────────────────────────────────────────────────────────┐
+    │                    CONTENT SCRIPT                            │
+    │                  (src/content/index.ts)                      │
+    │                                                              │
+    │  ┌──────────────────────────────────────────────────────┐    │
+    │  │  scrapeOrders()                                      │    │
+    │  │  ├─ Process Page 1 (current document)                │    │
+    │  │  ├─ Discover page URLs                               │    │
+    │  │  ├─ Prefetch pages in parallel                       │    │
+    │  │  └─ Execute pages in iframes (concurrent batches)    │    │
+    │  └──────────────────────────────────────────────────────┘    │
+    │                                                              │
+    │  ┌──────────────────────────────────────────────────────┐    │
+    │  │  executeHtmlInIframe()                               │    │
+    │  │  ├─ Create hidden iframe                             │    │
+    │  │  ├─ Inject HTML with Amazon's scripts                │    │
+    │  │  ├─ Wait for client-side decryption                  │    │
+    │  │  └─ Extract populated order data                     │    │
+    │  └──────────────────────────────────────────────────────┘    │
+    │                                                              │
+    │  ┌──────────────────────────────────────────────────────┐    │
+    │  │  extractOrderData()                                  │    │
+    │  │  ├─ Extract order number, date, total, status        │    │
+    │  │  └─ Extract order items (title, image, quantity)     │    │
+    │  └──────────────────────────────────────────────────────┘    │
+    │                                                              │
+    │  Message Listener: { type: "SCRAPE_ORDERS" }                 │
+    └───────────────────────────┬──────────────────────────────────┘
+                                │
+                                │ chrome.tabs.sendMessage()
+                                │
+                                ▼
+    ┌──────────────────────────────────────────────────────────────┐
+    │                    BACKGROUND SCRIPT                         │
+    │                 (src/background/index.ts)                    │
+    │                                                              │
+    │  ┌──────────────────────────────────────────────────────┐    │
+    │  │  Message Router                                      │    │
+    │  │  ├─ onInstalled listener                             │    │
+    │  │  └─ Message forwarding (if needed)                   │    │
+    │  └──────────────────────────────────────────────────────┘    │
+    └───────────────────────────┬──────────────────────────────────┘
+                                │
+                                │ Response
+                                │
+                                ▼
+    ┌──────────────────────────────────────────────────────────────┐
+    │                      POPUP UI                                │
+    │                    (src/popup/)                              │
+    │                                                              │
+    │  ┌──────────────────────────────────────────────────────┐    │
+    │  │  App.tsx (Main Component)                            │    │
+    │  │  ├─ OrderList component                              │    │
+    │  │  ├─ ExportComponent                                  │    │
+    │  │  └─ SignOutButton                                    │    │
+    │  └──────────────────────────────────────────────────────┘    │
+    │                                                              │
+    │  ┌──────────────────────────────────────────────────────┐    │
+    │  │  useOrders() Hook                                    │    │
+    │  │  ├─ getActiveTabId()                                 │    │
+    │  │  ├─ requestOrders() → sends message to content       │    │
+    │  │  └─ Manages state: orders, status, error             │    │
+    │  └──────────────────────────────────────────────────────┘    │
+    │                                                              │
+    │  ┌──────────────────────────────────────────────────────┐    │
+    │  │  Components/                                         │    │
+    │  │  ├─ OrderList.tsx                                    │    │
+    │  │  ├─ Order.tsx                                        │    │
+    │  │  ├─ OrderItem.tsx                                    │    │
+    │  │  ├─ ExportComponent.tsx                              │    │
+    │  │  └─ SignOutButton.tsx                                │    │
+    │  └──────────────────────────────────────────────────────┘    │
+    └───────────────────────────┬──────────────────────────────────┘
+                                │
+                                │ Export Actions
+                                │
+                ┌───────────────┴───────────────┐
+                │                               │
+                ▼                               ▼
+    ┌───────────────────────┐      ┌──────────────────────────┐
+    │   CSV Export          │      │   Google Drive Export    │
+    │   (src/utils/csv.ts)  │      │   (src/utils/            │
+    │                       │      │    googleDrive.ts)       │
+    │  ┌─────────────────┐  │      │                          │
+    │  │ generateCSV()   │  │      │  ┌────────────────────┐  │
+    │  │ formatCurrency()│  │      │  │ uploadToDrive()    │  │
+    │  └─────────────────┘  │      │  │ OAuth2 flow        │  │
+    │                       │      │  └────────────────────┘  │
+    │  Downloads to:        │      │                          │
+    │  Local Downloads      │      │  Requires:               │
+    └───────────────────────┘      │  - OAuth credentials     │
+                                   │  - User authorization    │
+                                   └──────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────────────────┐
+│                            DATA MODELS                                  │
+└─────────────────────────────────────────────────────────────────────────┘
+
+    ┌──────────────────────┐         ┌──────────────────────┐
+    │   Order              │         │   OrderItem          │
+    │  (src/model/         │         │  (src/model/         │
+    │   Order.ts)          │         │   OrderItem.ts)      │
+    │                      │         │                      │
+    │  - orderNumber       │         │  - title             │
+    │  - date              │◄────────┤  - imageUrl          │
+    │  - orderValue        │  has    │  - quantity          │
+    │  - status            │  many   │  - productUrl        │
+    │  - items: OrderItem[]│         │                      │
+    └──────────────────────┘         └──────────────────────┘
+
+┌─────────────────────────────────────────────────────────────────────────┐
+│                         MESSAGE FLOW                                    │
+└─────────────────────────────────────────────────────────────────────────┘
+
+    User clicks extension icon
+            │
+            ▼
+    Popup opens (App.tsx)
+            │
+            ▼
+    useOrders() hook initializes
+            │
+            ▼
+    chrome.tabs.sendMessage({ type: "SCRAPE_ORDERS" })
+            │
+            ▼
+    Content Script receives message
+            │
+            ▼
+    scrapeOrders() executes:
+      ├─ Process page 1
+      ├─ Discover page URLs
+      ├─ Prefetch pages (parallel)
+      ├─ Execute in iframes (concurrent batches)
+      └─ Extract order data
+            │
+            ▼
+    Response: { orders: Order[] }
+            │
+            ▼
+    Popup displays orders
+            │
+            ▼
+    User clicks "Export"
+            │
+            ├─→ CSV: Downloads to local folder
+            └─→ Google Drive: OAuth → Upload
+
+┌─────────────────────────────────────────────────────────────────────────┐
+│                      KEY TECHNICAL FEATURES                             │
+└─────────────────────────────────────────────────────────────────────────┘
+
+  • Concurrent Page Processing
+    └─ Prefetches multiple pages in parallel
+    └─ Executes iframes in batches (2 concurrent)
+    └─ Processes results in order
+
+  • Client-Side Decryption Handling
+    └─ Amazon uses encrypted order data
+    └─ Executes pages in sandboxed iframes
+    └─ Waits for SiegeClientSideDecryption scripts
+
+  • Error Handling
+    └─ Fallback to DOMParser if iframe fails
+    └─ Graceful degradation for failed pages
+    └─ User-friendly error messages
+
+  • Type Safety
+    └─ Full TypeScript implementation
+    └─ Type definitions for Order, OrderItem
+    └─ Type-safe message passing
+
