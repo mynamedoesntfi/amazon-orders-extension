@@ -2,7 +2,7 @@
   "manifest_version": 3,
   "name": "Amazon Orders Extension",
   "description": "Export Amazon cart data to CSV",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "action": {
     "default_popup": "popup.html",
     "default_title": "Amazon Orders Extension"
