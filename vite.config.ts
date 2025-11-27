@@ -1,55 +1,67 @@
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 import { resolve } from "path";
-import { copyFileSync, mkdirSync, readFileSync, writeFileSync } from "fs";
+import { copyFileSync, mkdirSync, readFileSync, writeFileSync, existsSync } from "fs";
 
-export default defineConfig({
-  plugins: [
-    react(),
-    {
-      name: "copy-manifest",
-      closeBundle() {
-        const distDir = resolve(__dirname, "dist");
-        mkdirSync(distDir, { recursive: true });
-        copyFileSync(resolve(__dirname, "manifest.json"), resolve(distDir, "manifest.json"));
-      },
-    },
-    {
-      name: "fix-background-script",
-      writeBundle(options) {
-        const bgPath = resolve(options.dir || "dist", "background/index.js");
-        try {
-          const content = readFileSync(bgPath, "utf8");
-          // Ensure the file ends with a newline
-          if (!content.endsWith("\n")) {
-            writeFileSync(bgPath, content + "\n", "utf8");
+export default defineConfig(({ mode }) => {
+  return {
+    plugins: [
+      react(),
+      {
+        name: "copy-manifest",
+        closeBundle() {
+          const distDir = resolve(__dirname, "dist");
+          mkdirSync(distDir, { recursive: true });
+          
+          const manifestFileName = mode === 'development' ? "manifest.dev.json" : "manifest.json";
+          const manifestPath = resolve(__dirname, manifestFileName);
+          
+          if (!existsSync(manifestPath)) {
+            console.warn(`Manifest file ${manifestFileName} not found, falling back to manifest.json`);
+            copyFileSync(resolve(__dirname, "manifest.json"), resolve(distDir, "manifest.json"));
+          } else {
+            console.log(`Using manifest: ${manifestFileName}`);
+            copyFileSync(manifestPath, resolve(distDir, "manifest.json"));
           }
-        } catch (error) {
-          // File might not exist yet, that's okay
-          console.warn("Could not fix background script:", error);
-        }
-      },
-    },
-  ],
-  build: {
-    outDir: "dist",
-    emptyOutDir: true,
-    rollupOptions: {
-      input: {
-        popup: resolve(__dirname, "popup.html"),
-        content: resolve(__dirname, "src/content/index.ts"),
-        background: resolve(__dirname, "src/background/index.ts"),
-      },
-      output: {
-        entryFileNames: (chunk) => {
-          if (chunk.name === "background") return "background/index.js";
-          if (chunk.name === "content") return "content/index.js";
-          return "assets/[name].js";
         },
-        chunkFileNames: "assets/[name].js",
-        assetFileNames: "assets/[name][extname]",
-        format: "es",
+      },
+      {
+        name: "fix-background-script",
+        writeBundle(options) {
+          const bgPath = resolve(options.dir || "dist", "background/index.js");
+          try {
+            const content = readFileSync(bgPath, "utf8");
+            // Ensure the file ends with a newline
+            if (!content.endsWith("\n")) {
+              writeFileSync(bgPath, content + "\n", "utf8");
+            }
+          } catch (error) {
+            // File might not exist yet, that's okay
+            console.warn("Could not fix background script:", error);
+          }
+        },
+      },
+    ],
+    build: {
+      outDir: "dist",
+      emptyOutDir: true,
+      rollupOptions: {
+        input: {
+          popup: resolve(__dirname, "popup.html"),
+          content: resolve(__dirname, "src/content/index.ts"),
+          background: resolve(__dirname, "src/background/index.ts"),
+        },
+        output: {
+          entryFileNames: (chunk) => {
+            if (chunk.name === "background") return "background/index.js";
+            if (chunk.name === "content") return "content/index.js";
+            return "assets/[name].js";
+          },
+          chunkFileNames: "assets/[name].js",
+          assetFileNames: "assets/[name][extname]",
+          format: "es",
+        },
       },
     },
-  },
+  };
 });

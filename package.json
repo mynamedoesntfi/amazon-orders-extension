@@ -6,6 +6,7 @@
     "dev": "vite",
     "clean": "node --input-type=module -e \"import {rmSync} from 'fs'; try { rmSync('dist', {recursive: true, force: true}); } catch(e) {}\"",
     "build": "npm run clean && tsc && vite build",
+    "build:dev": "npm run clean && tsc && vite build --mode development",
     "lint": "eslint . --ext .ts,.tsx"
   },
   "type": "module",
